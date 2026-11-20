@@ -1,0 +1,32 @@
+.file-preview {
+    max-height: 300px;
+    overflow-y: auto;
+
+    margin-top: 10px;
+
+    border: 1px solid #ddd;
+    border-radius: 4px;
+
+    padding: 10px;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 8px 0;
+
+    border-bottom: 1px solid #eee;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-info {
+    word-break: break-word;
+    flex: 1;
+}

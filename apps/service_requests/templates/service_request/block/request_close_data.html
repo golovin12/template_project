@@ -1,0 +1,17 @@
+<div class="row mt-4">
+    {% if svc_request.service_report or svc_request.other_expenses %}
+        <div class="col-md-6">
+            <p style="line-height: 1">
+                <strong>Отчёт о работе:</strong> {{ svc_request.service_report|linebreaksbr }}
+                {% if svc_request.other_expenses %}
+                    [Прочие затраты: {{ svc_request.get_other_expenses_display }}]
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+    {% if svc_request.closing_amount %}
+        <div class="col-md-6">
+            <p><strong>Прибыль:</strong> {{ svc_request.get_closing_amount_display }}</p>
+        </div>
+    {% endif %}
+</div>

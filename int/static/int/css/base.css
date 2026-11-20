@@ -1,0 +1,152 @@
+.word-breaks {
+    word-break: break-word;
+    line-height: 1;
+}
+
+.bg-dark-blue {
+    background-color: #44556e !important;
+    color: white !important;
+}
+
+.action-btn {
+    margin: 0 5px 5px 0;
+    min-width: 200px;
+}
+
+.btn-danger-darker {
+    background-color: #a71d2a;
+    border-color: #a71d2a;
+    color: white;
+}
+
+.btn-danger-darker:hover {
+    background-color: #8b1520;
+    border-color: #8b1520;
+    color: white;
+}
+
+/*select2*/
+.select2-search__field {
+    min-width: 7.5em;
+}
+
+.select2-container {
+    margin-right: 0.4em;
+}
+
+.select2-selection--single,
+.select2-selection--multiple {
+    height: auto !important;
+    min-height: 2.4rem !important;
+    border-color: #ced4da !important;
+}
+
+.select2-selection--single .select2-selection__rendered,
+.select2-selection--multiple .select2-selection__rendered {
+    padding-top: .375rem !important;
+    line-height: 1.5 !important;
+}
+
+.select2-selection--single .select2-selection__arrow,
+.select2-selection--multiple .select2-selection__arrow {
+    height: 38px !important;
+    right: 4px !important;
+}
+
+.form-group.is-valid .select2-container--default .select2-selection--single,
+.form-group.is-valid .select2-container--default .select2-selection--multiple {
+    border-color: #28a745 !important;
+}
+
+.form-group.is-invalid .select2-container--default .select2-selection--single,
+.form-group.is-invalid .select2-container--default .select2-selection--multiple {
+    border-color: #dc3545 !important;
+}
+
+/*
+отступы для элементов инлайн форм
+<form class="form-inline">{% bootstrap_form filter_form layout='inline' %}...
+<form class="form-inline justify-content-center">{% bootstrap_form filter_form layout='inline' %}...
+*/
+.form-inline input, .form-inline select, .form-inline button, .form-inline a, .form-inline .form-check-label {
+    margin-right: 0.4rem;
+!important;
+}
+
+/*заголовки таблиц*/
+table.table th {
+    background-color: rgba(233, 236, 239, 0.63);
+!important;
+}
+
+/*убрать зелёную галку валидных полей bs4*/
+.form-control.is-valid, .was-validated .form-control:valid {
+    background-image: none !important;
+    padding-right: 0.5rem !important;
+}
+
+/*запрет выделения иконок*/
+.material-icons, .unselectable {
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/*убрать мелкие кнопки +1 -1 для input[type=number]*/
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* отображение ошибок для виджетов RadioSelect, CheckboxSelectMultiple */
+.is-invalid > .invalid-feedback {
+    display: block;
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.p-x-adaptive {
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+}
+
+@media (min-width: 576px) {
+    .p-x-adaptive {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+
+.input-with-clear {
+    position: relative;
+    display: inline-block;
+}
+
+.input-with-clear input {
+    padding-right: 25px; /* место под кнопку */
+}
+
+.input-with-clear .clear-btn {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    cursor: pointer;
+    display: none; /* скрыта по умолчанию */
+}
+
+.input-with-clear input:not(:placeholder-shown) ~ .clear-btn {
+    display: block;
+}

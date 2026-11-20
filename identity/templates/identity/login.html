@@ -1,0 +1,50 @@
+{% extends 'int/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block breadcrumb_wrap %}{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header p-x-adaptive bg-dark-blue">
+                    <h4 class="mb-0">Вход в систему</h4>
+                </div>
+                <div class="card-body p-x-adaptive">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Неправильное имя пользователя или пароль.
+                        </div>
+                    {% endif %}
+
+                    {% if next %}
+                        {% if user.is_authenticated %}
+                            <div class="alert alert-warning">
+                                У вашей учетной записи нет доступа к этой странице.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                Пожалуйста, войдите, чтобы увидеть эту страницу.
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <form method="post" action="{% url 'identity:login' %}">
+                        {% csrf_token %}
+                        {% bootstrap_form form %}
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="material-icons align-bottom">login</i> Войти
+                            </button>
+                        </div>
+
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

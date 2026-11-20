@@ -1,0 +1,36 @@
+{% extends "int/filter_table.html" %}
+
+{% block title %}Все филиалы{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'accounts:branch_list' %}">
+            <span class="material-icons align-bottom">apartment</span> Все филиалы
+        </a>
+    </li>
+    {% if filter_text %}
+        <li class="breadcrumb-item">{{ filter_text }}</li>
+    {% endif %}
+    <li class="ml-auto">
+        <a href="{% url 'accounts:branch_create' %}" class="btn btn-sm btn-primary py-1 px-2" role="button">
+            <i class="material-icons align-bottom">add_box</i> Новый филиал
+        </a>
+    </li>
+{% endblock %}
+
+{% block additional_filter_buttons %}
+    <a class="btn btn-outline-secondary mb-1" title="Сбросить фильтр" role="button"
+       href="{% url 'accounts:branch_list' %}">
+        <i class="material-icons align-bottom">close</i>
+    </a>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_city').select2({
+                width: '100%', dropdownAutoWidth: true
+            }).data('select2').$container.attr("style", "min-width: 7.5em; max-width: 50em;")
+        })
+    </script>
+{% endblock %}

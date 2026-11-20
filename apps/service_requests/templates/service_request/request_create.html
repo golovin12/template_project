@@ -1,0 +1,103 @@
+{% extends "int/base.html" %}
+{% load static %}
+{% load bootstrap4 %}
+
+{% block title %}Создание заявки{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'service_request:request_main' %}">
+            <span class="material-icons">construction</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Создание заявки
+    </li>
+{% endblock %}
+
+{% block content %}
+    <div class="card shadow mb-3">
+        <div class="card-header p-x-adaptive h4 bg-dark-blue">
+            Создание заявки
+        </div>
+        <div class="card-body p-0">
+            <form method="post" autocomplete="off" class="prevent-double-submit">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 d-flex">
+                        <div class="card shadow mb-4">
+                            <div class="card-header p-x-adaptive bg-light py-1">Информация о клиенте</div>
+                            <div class="card-body p-x-adaptive pt-1">
+                                <div class="row">
+                                    {% bootstrap_field form.client_name form_group_class="col-12" %}
+                                    {% bootstrap_field form.request_type form_group_class="col-12 col-lg-6" %}
+                                    {% bootstrap_field form.client_phone form_group_class="col-12 col-lg-6" %}
+                                    {% bootstrap_field form.client_address form_group_class="col-12 col-sm-9 pr-sm-1" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 d-flex">
+                        <div class="card shadow mb-4 w-100">
+                            <div class="card-header p-x-adaptive bg-light py-1">Информация о проблеме</div>
+                            <div class="card-body p-x-adaptive pt-1">
+                                <div class="row">
+                                    {% bootstrap_field form.device_type form_group_class="col-12" %}
+                                    {% bootstrap_field form.problem_description form_group_class="col-12" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-header p-x-adaptive bg-light py-1">Прочая информация</div>
+                            <div class="card-body p-x-adaptive pt-1">
+                                <div class="row">
+                                    {% bootstrap_field form.time_to_service form_group_class="col-12 col-md-6" %}
+                                    {% bootstrap_field form.branch form_group_class="col-12 col-md-6" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <button type="submit" class="btn btn-success action-btn py-2 px-5">
+                        <i class="material-icons align-bottom">check</i> Создать заявку
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_branch').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+            $('#id_request_type').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+            $('#id_device_type').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+        })
+    </script>
+    <script>
+        const deviceTypeBranches = {{ device_type_branches|safe }};
+    </script>
+    <script src="{% static 'service_request/js/filter_branch_by_device_type.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,28 @@
+from int.management.storage_backends import MediaStorage
+
+
+def add_field_name_kwargs(field_name):
+    """Внешняя функция принимает параметры декоратора"""
+
+    def decorator(func):
+        """Собственно декоратор"""
+
+        def wrapper(*args, **kwargs):
+            """Обёртка вокруг декорируемой функции"""
+            result = func(*args, field_name=field_name, **kwargs)
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+def auto_delete_file_on_delete(sender, **kwargs):
+    """Удаляет файл из S3 при удалении объекта модели."""
+    instance = kwargs['instance']
+    field_name = kwargs['field_name']
+    file = getattr(instance, field_name)
+    if file:
+        storage = file.storage
+        if isinstance(storage, MediaStorage):
+            storage.delete(file.name)

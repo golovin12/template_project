@@ -1,0 +1,20 @@
+{% extends "int/base.html" %}
+
+{% block breadcrumb_wrap %}{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-md-center">
+        <div class="col col-md-8 col-xl-5">
+            <div class="card shadow">
+                <div class="card-header p-x-adaptive bg-dark-blue">
+                    <span>{{ title }}</span>
+                </div>
+                <div class="card-body p-x-adaptive">
+                    <a id="go_to_login" href="{% url 'identity:login' %}" class="btn btn-primary mt-3">
+                        <strong>Войти снова</strong>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

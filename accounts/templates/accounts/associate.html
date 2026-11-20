@@ -1,0 +1,69 @@
+{% extends 'int/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Привязать: {{ form.instance.username }}{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'accounts:list' %}">
+            <span class="material-icons">person</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Привязать аккаунт: {{ form.instance.username }} к текущей зоне
+    </li>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header p-x-adaptive h4 bg-dark-blue">
+                    Привязать аккаунт: {{ form.instance.username }} к текущей зоне
+                </div>
+                <div class="card-body p-x-adaptive pb-0">
+                    <form method="post" autocomplete="off" class="prevent-double-submit">
+                        {% csrf_token %}
+
+                        <div class="row mb-4">
+                            {% bootstrap_field form.role form_group_class="col-lg-6" %}
+                            {% bootstrap_field form.all_cities_access form_group_class="col-lg-6" %}
+                            {% bootstrap_field form.is_history_access form_group_class="col-12" %}
+                            {% bootstrap_field form.is_cash_collection_access form_group_class="col-12" %}
+                            {% bootstrap_field form.is_act_creation_access form_group_class="col-12" %}
+                            {% bootstrap_field form.cities form_group_class="col-12" %}
+                        </div>
+
+                        <div class="form-group text-right">
+                            <button type="submit" class="btn btn-success mb-2 mb-sm-0">
+                                <i class="material-icons align-bottom">check</i> Привязать к текущей зоне
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_role').select2({
+                width: '100%', dropdownAutoWidth: true
+            });
+            $('#id_cities').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+        })
+    </script>
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends 'promoter_app/base.html' %}
+
+{% block title %}ПромоТрек - {{ city.name }}{% endblock %}
+
+{% block breadcrumb_left %}
+    <li class="breadcrumb-item h4 mb-0">
+        <a href="{% url 'promoter_app:dashboard' %}">
+            <span class="material-icons align-bottom">person_pin_circle</span> ПромоТрек - {{ city.name }}
+        </a>
+    </li>
+{% endblock %}
+
+{% block breadcrumb_right %}
+    <button class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#appDownloadModal">
+        <span class="material-icons align-middle">download</span> Скачать приложение
+    </button>
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-9 col-lg-7 col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header p-x-adaptive h4 bg-dark-blue d-flex flex-wrap">
+                    <div>ПромоТрек - {{ city.name }}</div>
+                </div>
+                <div class="card-body p-x-adaptive">
+                    <div class="row">
+                        <div class="col-12 col-sm-6 mb-3">
+                            <a href="{% url 'promoter_app:routes_editor' %}" class="btn btn-warning w-100"
+                               role="button">
+                                <i class="material-icons align-bottom">map</i> Редактор маршрутов
+                            </a>
+                        </div>
+                        <div class="col-12 col-sm-6 mb-3">
+                            <a href="{% url 'promoter_app:routes_assign' %}" class="btn btn-success w-100"
+                               role="button">
+                                <i class="material-icons align-bottom">add_location</i> Назначить на маршрут
+                            </a>
+                        </div>
+                        <div class="col-12 mb-5">
+                            <a href="{% url 'promoter_app:assignments' %}" class="btn btn-info w-100"
+                               role="button">
+                                <i class="material-icons align-bottom">photo_library</i>
+                                <span class="d-inline-block d-sm-none">Данные с маршрутов</span>
+                                <span class="d-none d-sm-inline-block">Просмотр данных с маршрутов</span>
+                            </a>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex w-100" role="group">
+                                <a href="{% url 'promoter_app:promoters_list' %}"
+                                   class="btn btn-outline-primary flex-grow-1" role="button">
+                                    <i class="material-icons align-bottom">groups</i> Промоутеры
+                                </a>
+                                <button type="button" class="btn btn-sm btn-primary py-1 px-2" data-toggle="modal"
+                                        data-target="#promoterModal">
+                                    <i class="material-icons align-bottom">add_box</i> Создать
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="promoterModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark-blue p-x-adaptive">
+                    <h5 class="modal-title">Создать промоутера</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span class="text-white">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body p-x-adaptive">
+                    <input type="hidden" id="promoter-id">
+                    <div class="form-group">
+                        <label for="promoter-nickname">Введите ник</label>
+                        <input type="text" class="form-control" id="promoter-nickname">
+                    </div>
+                </div>
+
+                <div class="modal-footer p-x-adaptive">
+                    <button class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button class="btn btn-primary" id="save-promoter-btn">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="appDownloadModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content">
+                <div class="modal-header bg-dark-blue">
+                    <h5 class="modal-title text-white">Скачать приложение</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <ul class="nav nav-pills mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="pill" href="#androidTab">Android</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#iosTab">iOS</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="androidTab">
+                            <ul class="nav nav-tabs mb-3">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-toggle="tab" href="#apkTab">APK</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="tab" href="#googlePlayTab">GooglePlay</a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="apkTab">
+                                    {% if apk_url %}
+                                        <div class="d-flex justify-content-center mb-3">
+                                            <div class="qr-frame" id="qr-apk"></div>
+                                        </div>
+                                        <a href="{{ apk_url }}" target="_blank" class="btn btn-primary w-100">
+                                            Скачать APK
+                                        </a>
+                                    {% else %}
+                                        <div class="text-center text-muted">В разработке</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tab-pane fade" id="googlePlayTab">
+                                    {% if google_play_url %}
+                                        <div class="d-flex justify-content-center mb-3">
+                                            <div class="qr-frame" id="qr-googlePlay"></div>
+                                        </div>
+                                        <a href="{{ google_play_url }}" target="_blank" class="btn btn-primary w-100">
+                                            Перейти в Google Play
+                                        </a>
+                                    {% else %}
+                                        <div class="text-center text-muted">В разработке</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="iosTab">
+                            {% if ios_url %}
+                                <div class="d-flex justify-content-center mb-3">
+                                    <div class="qr-frame" id="qr-ios"></div>
+                                </div>
+                                <a href="{{ ios_url }}" target="_blank" class="btn btn-primary w-100">
+                                    Перейти в AppStore
+                                </a>
+                            {% else %}
+                                <div class="text-center text-muted">В разработке</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    {{ block.super }}
+    <script>
+        $('#save-promoter-btn').on('click', function () {
+            const $btn = $(this)
+
+            $btn.prop('disabled', true)
+
+            $.post({
+                url: '{% url "promoter_app:promoter_create" %}',
+                data: {
+                    nickname: $('#promoter-nickname').val().trim(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (res) {
+                    $('#promoterModal').modal('hide')
+                    $btn.prop('disabled', false)
+
+                    if (res.reload_url) {
+                        location.href = res.reload_url
+                    } else {
+                        location.reload()
+                    }
+                },
+                error: function (xhr) {
+                    showNotification(xhr.responseJSON?.error || 'Ошибка сохранения', 'error')
+                    $btn.prop('disabled', false)
+                }
+            })
+        })
+    </script>
+    <script>
+        function makeQR(id, text) {
+            if (!text) return;
+
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            el.innerHTML = "";
+
+            new QRCode(el, {
+                text: text,
+                width: 180,
+                height: 180
+            });
+        }
+
+        $('#appDownloadModal').on('shown.bs.modal', function () {
+            makeQR("qr-apk", "{{ apk_url|default:'' }}");
+            makeQR("qr-googlePlay", "{{ google_play_url|default:'' }}");
+            makeQR("qr-ios", "{{ ios_url|default:'' }}");
+        });
+    </script>
+{% endblock %}

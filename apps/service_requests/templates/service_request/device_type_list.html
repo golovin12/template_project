@@ -1,0 +1,60 @@
+{% extends "int/base.html" %}
+{% load static %}
+{% load bootstrap4 %}
+
+{% block title %}Все типы{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'service_request:device_type_list' %}">
+            <span class="material-icons align-bottom">computer</span> Все типы
+        </a>
+    </li>
+    <li class="ml-auto">
+        <a href="{% url 'service_request:device_type_create' %}" class="btn btn-sm btn-primary py-1 px-2" role="button">
+            <i class="material-icons align-bottom">add_box</i> Новый тип
+        </a>
+    </li>
+{% endblock %}
+
+{% block content %}
+    {% include 'int/table.html' with table=table %}
+
+    <div class="modal fade" id="deviceUpdateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark-blue">
+                    <h5 class="modal-title">Редактирование типа техники</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span class="text-white" aria-hidden="true">&times;</span></button>
+                </div>
+                <form method="post" autocomplete="off" id="deviceUpdate">
+                    {% csrf_token %}
+                    <div class="modal-body" id="deviceUpdateBody">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success action-btn">
+                            <i class="material-icons align-bottom">check</i> Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script src="{% static 'int/js/form_ajax.js' %}"></script>
+    <script>
+        function confirmDelete(device_type, url) {
+            if (confirm(`Вы точно хотите удалить тип "${device_type}"?`)) {
+                window.location.href = url;
+            }
+        }
+
+        bindAjaxFormSubmit(
+            "#deviceUpdate",
+            "#deviceUpdateBody"
+        );
+    </script>
+{% endblock %}

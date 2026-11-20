@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Внутренняя ошибка: 500</title>
+</head>
+<body>
+<div style="text-align: center; font-size: 20px;">
+    <h3>
+        <strong>500: Внутренняя ошибка сервера</strong><br>
+    </h3>
+    <p>
+        У нас произошла ошибка <br>
+        Скорее всего мы уже знаем о ней.
+    </p>
+    <p>
+        Вы можете:<br/>
+        <a href="javascript:history.back()">Вернуться назад</a><br/>
+        <a href="{% url 'home' %}">Перейти на главную страницу</a>
+    </p>
+</div>
+</body>
+</html>

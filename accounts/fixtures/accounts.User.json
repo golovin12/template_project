@@ -1,0 +1,22 @@
+[
+  {
+    "model": "accounts.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$G9ZilkZ2nNd14jtnL2WUgW$kM66PQ6TjoZ/xwrBgz0lwynasdZ2ZysHzD3ULQlXs8E=",
+      "last_login": "2025-01-29T04:48:00.615",
+      "is_superuser": true,
+      "username": "developer_acc",
+      "first_name": "Разработчик",
+      "last_name": "",
+      "second_name": "",
+      "email": "golovin.denis@lenta.ru",
+      "role": "",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-01-01T00:00:00.144",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]

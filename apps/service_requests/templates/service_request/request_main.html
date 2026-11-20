@@ -1,0 +1,80 @@
+{% extends 'int/base.html' %}
+{% load static bootstrap4 %}
+
+{% block title %}Система заявок{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'service_request:request_main' %}">
+            <span class="material-icons">construction</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Система заявок
+    </li>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-9 col-lg-7 col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header p-x-adaptive h4 bg-dark-blue d-flex flex-wrap">
+                    <div>Система заявок</div>
+                    <div class="ml-auto">
+                        <a href="{% url 'service_request:request_create' %}" class="btn btn-sm btn-info py-1 px-2"
+                           role="button">
+                            <i class="material-icons align-bottom">add_box</i> Новая заявка
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-x-adaptive">
+                    <div class="row">
+                        <form role="form" class="col-12 mb-3 d-flex" action="{% url 'service_request:request_list' %}"
+                              method="GET" autocomplete="off">
+                            <input type="hidden" name="condition" value="all">
+                            {% bootstrap_field form.client_phone layout='inline' form_group_class='flex-grow-1 mr-2 mb-0' show_help=False %}
+                            <button type="submit" class="btn btn-outline-secondary mr-0">
+                                <i class="material-icons align-bottom">search</i>
+                            </button>
+                        </form>
+                        <div class="col-12 mb-3">
+                            <a href="{% url 'service_request:request_list' %}" class="btn btn-warning w-100"
+                               role="button">
+                                <i class="material-icons align-bottom">construction</i>
+                                Заявки в работе ({{ request_stat.in_progress_count }})
+                            </a>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex w-100" role="group">
+                                <a href="{% url 'service_request:request_list' %}?condition=diagnostic"
+                                   class="btn btn-danger flex-grow-1" role="button">
+                                    <i class="material-icons align-bottom">business_center</i>
+                                    На диагностике ({{ request_stat.diagnostic_count }})
+                                </a>
+                                <a href="{% url 'service_request:request_list' %}?condition=diagnostic&sd_closing_today=on"
+                                   class="btn btn-danger-darker" role="button" style="white-space: nowrap;">
+                                    Сегодня ({{ request_stat.diagnostic_today_count }})
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <a href="{% url 'service_request:request_list' %}?condition=all"
+                               class="btn btn-primary w-100" role="button">
+                                <i class="material-icons align-bottom">list</i> Все заявки
+                            </a>
+                        </div>
+                        {% if is_chief or is_manager %}
+                            <div class="col-12 mt-2">
+                                <a href="{% url 'service_request:created_count' %}?as_month=on"
+                                   class="btn btn-outline-secondary w-100" role="button">
+                                    <i class="material-icons align-bottom">phone_callback</i>
+                                    Принятые заявки юзеров
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

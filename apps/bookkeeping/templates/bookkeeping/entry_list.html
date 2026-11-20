@@ -1,0 +1,128 @@
+{% extends "int/filter_table.html" %}
+{% load common_tags %}
+
+{% block title %}Бухгалтерия{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'bookkeeping:dashboard' %}">
+            <i class="material-icons align-bottom">account_balance</i>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Бухгалтерия
+    </li>
+    {% if filter_text %}
+        <li class="breadcrumb-item">{{ filter_text }}</li>
+    {% endif %}
+    <li class="ml-auto">
+        <button class="btn btn-sm btn-primary py-1 px-2" data-toggle="modal" data-target="#entryTypeModal">
+            <i class="material-icons align-bottom">add_box</i> Новая запись
+        </button>
+    </li>
+{% endblock %}
+
+{% block content_container_cls %}container-fluid{% endblock %}
+
+{% block additional_filter_buttons %}
+    {% if filter_form.added_range %}
+        <button type="submit" class="btn btn-outline-primary mb-1" name="as_month" value="1"
+                title="Статистика за месяц">
+            <i class="material-icons align-bottom">calendar_month</i> За месяц
+        </button>
+    {% endif %}
+    <a class="btn btn-outline-secondary mb-1" title="Сбросить фильтр" role="button"
+       href="{% url 'bookkeeping:entry_list' %}{% if city_id %}?city={{ city_id }}{% endif %}">
+        <i class="material-icons align-bottom">close</i>
+    </a>
+    {% if filter_form.added_range %}
+        <button type="submit" class="btn btn-outline-secondary mb-1" name="to_excel" value="1"
+                title="Выгрузить в excel">
+            <i class="material-icons align-bottom">get_app</i>
+        </button>
+    {% endif %}
+{% endblock %}
+
+{% block pre_table_content %}
+    <div class="card mb-4 shadow">
+        <div class="card-header p-x-adaptive bg-dark-blue">
+            <h5 class="mb-0">Итоги</h5>
+        </div>
+        <div class="card-body p-x-adaptive">
+            <div class="row">
+                <div class="col-sm-6 col-md-3 order-0 order-sm-0 order-md-0">
+                    <p class="mb-1">Общий доход:</p>
+                    <h4 class="text-success">{{ total_income|format_money }} руб.</h4>
+                </div>
+                <div class="col-sm-6 col-md-3 order-1 order-sm-2 order-md-1">
+                    <p class="mb-1">Общий расход (включая зп):</p>
+                    <h4 class="text-danger">{{ total_expense|format_money }} руб.</h4>
+                </div>
+                <div class="col-sm-6 col-md-3 order-2 order-sm-3 order-md-2">
+                    <p class="mb-1">Зарплата мастерам:</p>
+                    <h4 class="text-warning">{{ total_expense_salary|format_money }} руб.</h4>
+                </div>
+                <div class="col-sm-6 col-md-3 order-3 order-sm-1 order-md-3">
+                    <p class="mb-1">Чистый доход:</p>
+                    <h4 class="font-weight-bold text-{% if balance >= 0 %}success{% else %}danger{% endif %}">
+                        {{ balance|format_money }} руб.
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'bookkeeping/block/modal_entry_type_create.html' %}
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_entry_types').select2().data("select2").$container.attr("style", "width: 10em;")
+            $('#id_expense_subtype').select2().data('select2').$container.attr("style", "width: 10em;");
+
+            // Фильтр филиалов по городу
+            let citySelect = $('#id_city');
+            let branchSelect = $('#id_branch');
+
+            branchSelect.select2({width: '100%', dropdownAutoWidth: true}).data('select2').$container.attr(
+                "style", "min-width: 7.5em; max-width: 50em;");
+
+            if (citySelect.length && citySelect.attr("type") !== "hidden") {
+                citySelect.select2().data('select2').$container.attr("style", "min-width: 7.5em; max-width: 50em;");
+            }
+
+            const initialBranchValue = branchSelect.val();
+            const allBranches = branchSelect.find('option').detach();
+
+            function filterBranches(isInitial = false) {
+                const selectedCity = citySelect.find('option:selected').text();
+                const selectedBranchValue = isInitial ? initialBranchValue : branchSelect.val();
+
+                branchSelect.empty();
+
+                allBranches.each(function () {
+                    const optionText = $(this).text();
+
+                    if (!selectedCity || optionText.startsWith(selectedCity)) {
+                        branchSelect.append($(this));
+                    }
+                });
+
+                if (selectedBranchValue && branchSelect.find(`option[value="${selectedBranchValue}"]`).length) {
+                    branchSelect.val(selectedBranchValue);
+                } else {
+                    branchSelect.val(null);
+                }
+
+                branchSelect.trigger('change.select2');
+            }
+
+            citySelect.on('change', function () {
+                filterBranches(false);
+            });
+
+            filterBranches(true);
+        })
+    </script>
+{% endblock %}

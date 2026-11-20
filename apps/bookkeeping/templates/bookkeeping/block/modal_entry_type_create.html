@@ -1,0 +1,35 @@
+<div class="modal fade" id="entryTypeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark-blue">
+                <h5 class="modal-title">Выберите тип записи<br><small>(Бухгалтерия)</small></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span class="text-white" aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <a href="{% url 'bookkeeping:entry_create' %}?mode=income"
+                           class="btn btn-success w-100 mb-2 mr-md-1">
+                            <i class="material-icons align-bottom">add</i> Доходы
+                        </a>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <a href="{% url 'bookkeeping:entry_create' %}?mode=expense"
+                           class="btn btn-danger w-100 mb-2 ml-md-1">
+                            <i class="material-icons align-bottom">remove</i> Расходы
+                        </a>
+                    </div>
+                    <div class="col-12">
+                        <a href="{% url 'bookkeeping:salary_payment_accounting_create' %}"
+                           class="btn btn-outline-primary w-100">
+                            <i class="material-icons align-bottom">person</i> ЗП сотруднику
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

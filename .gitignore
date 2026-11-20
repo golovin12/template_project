@@ -1,0 +1,32 @@
+# Python caches the compiled version of each module in the __pycache__ directory
+__pycache__/
+# на случай вставок py2-кода:
+*.py[cod]
+
+# Файлы виртуального окружения
+.env*
+venv/*
+/.python-version
+
+# базы sqlite
+*.sqlite3
+
+# IDE files
+/.idea/
+*~
+
+# Git-файлы orig создаются при различных "откатах"
+*.orig
+
+# static-файлы на сервере -- перетираются командой ./manage.py collectstatic
+/staticfiles/
+
+# Файлы media
+/media/
+
+# логи
+*.log
+
+# Сертификаты
+*certs/
+certbot/

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+  <msapplication>
+    <tile>
+      <!-- Путь к иконке для плитки (обязательно) -->
+      <square150x150logo src="/static/int/img/mstile-150x150.png"/>
+
+      <!-- Цвет фона плитки (обязательно) -->
+      <TileColor>#e6e6fa</TileColor>
+
+      <!-- Режим отображения (опционально) -->
+      <TileImage src="/static/int/img/mstile-150x150.png"/>
+    </tile>
+  </msapplication>
+</browserconfig>
