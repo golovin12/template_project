@@ -68,32 +68,35 @@ def add_tasks(scheduler):
     # django_dramatiq
     scheduler.add_job(django_dramatiq_tasks.delete_old_tasks.send, CRON, hour='23', minute='0')
     # notifications_queue
-    scheduler.add_job(bind_db_alias(notification_tasks.send_notifications.send_with_zone, 'default'), INTERVAL, minutes=1)
+    scheduler.add_job(bind_db_alias(notification_tasks.send_notifications.send_with_db_alias, 'default'), INTERVAL,
+                      minutes=1)
     # notifications
-    scheduler.add_job(bind_db_alias(notification_tasks.cleanup_old_telegram_messages.send_with_zone, 'default'),
+    scheduler.add_job(bind_db_alias(notification_tasks.cleanup_old_telegram_messages.send_with_db_alias, 'default'),
                       CRON, hour='3', minute='0')
     # Other zones
     all_databases = list(settings.DATABASES.keys())
     db_aliases = [alias for alias in all_databases if alias != 'old']
     for alias in db_aliases:
         # backup
-        scheduler.add_job(bind_db_alias(main_tasks.create_everyday_backup.send_with_zone, alias),
+        scheduler.add_job(bind_db_alias(main_tasks.create_everyday_backup.send_with_db_alias, alias),
                           CRON, hour='1', minute='0', jitter=360)
-        scheduler.add_job(bind_db_alias(main_tasks.create_every_week_backup.send_with_zone, alias),
+        scheduler.add_job(bind_db_alias(main_tasks.create_every_week_backup.send_with_db_alias, alias),
                           CRON, day_of_week='0', hour='1', minute='30', jitter=360)
-        scheduler.add_job(bind_db_alias(main_tasks.create_every_month_backup.send_with_zone, alias),
+        scheduler.add_job(bind_db_alias(main_tasks.create_every_month_backup.send_with_db_alias, alias),
                           CRON, day='1', hour='2', minute='0', jitter=360)
     for alias in db_aliases:
         if alias == 'default':
             continue
         # statistics
-        scheduler.add_job(bind_db_alias(statistics_tasks.rebuild_cities_statistic.send_with_zone, alias),
+        scheduler.add_job(bind_db_alias(statistics_tasks.rebuild_cities_statistic.send_with_db_alias, alias),
                           CRON, hour='2', minute='12', jitter=300)
         # promotreck
-        scheduler.add_job(bind_db_alias(promotreck_tasks.cleanup_old_promoter_assignment_photos.send_with_zone, alias),
-                          CRON, hour='2', minute='30', jitter=300)
-        scheduler.add_job(bind_db_alias(promotreck_tasks.cleanup_old_promoter_assignment_photos.send_with_zone, alias),
-                          CRON, hour='14', jitter=180)
+        scheduler.add_job(
+            bind_db_alias(promotreck_tasks.cleanup_old_promoter_assignment_photos.send_with_db_alias, alias),
+            CRON, hour='2', minute='30', jitter=300)
+        scheduler.add_job(
+            bind_db_alias(promotreck_tasks.cleanup_old_promoter_assignment_photos.send_with_db_alias, alias),
+            CRON, hour='14', jitter=180)
     # # примеры:
     # # scheduler.add_job(demo_tasks.operational_error_task.send, INTERVAL, minutes=1)
     # # scheduler.add_job(demo_tasks.send_email.send, INTERVAL, minutes=1, args=['golovin.dv@gmail.com'])
