@@ -15,8 +15,9 @@ def create_backup(prefix: str) -> None:
     temp_file_name = f'{directory}/{file_name}'
 
     # Приложения для которых нужно делать дамп
-    app_labels = ('identity', 'accounts', 'bookkeeping', 'service_requests', 'notifications.NotificationSettings',
-                  'notifications.NotificationChannel', 'notifications.CityNotificationPreference')
+    notification_labels = ('notifications.NotificationSettings', 'notifications.NotificationChannel',
+                           'notifications.CityNotificationPreference')
+    app_labels = ('identity', 'accounts', 'bookkeeping', 'service_requests', *notification_labels)
 
     with open(temp_file_name, 'w') as file:
         call_command(
