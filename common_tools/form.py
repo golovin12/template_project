@@ -201,7 +201,7 @@ class CustomModelChoiceFieldInterface(forms.ChoiceField):
             raise ValueError('CustomModelChoiceFieldInterface требует queryset')
         self.queryset = queryset
         # Пустая метка только если поле не required или нет initial
-        self.empty_label = None if kwargs.get('required') and kwargs.get('initial') else "---------"
+        self.empty_label = None if kwargs.get('required') and kwargs.get('initial') else '---------'
         self.choices = self.get_choices
 
     def __deepcopy__(self, memo):
@@ -235,8 +235,8 @@ class CustomModelChoiceFieldInterface(forms.ChoiceField):
     def has_changed(self, initial, data):
         if self.disabled:
             return False
-        initial_value = "" if initial is None else self.prepare_value(initial)
-        data_value = "" if data is None else data
+        initial_value = '' if initial is None else self.prepare_value(initial)
+        data_value = '' if data is None else data
         return str(initial_value) != str(data_value)
 
     def get_choices(self):
