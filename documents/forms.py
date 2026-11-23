@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import DocumentsUser, DocumentFolder, DocumentFile
+from .models import DocumentsUser, DocumentFile, DocumentFolder
 
 
 class DocumentsRegistrationForm(forms.Form):
@@ -20,7 +20,9 @@ class DocumentsRegistrationForm(forms.Form):
         username = self.cleaned_data['username'].strip()
 
         if DocumentsUser.objects.filter(username__iexact=username).exists():
-            raise ValidationError('Пользователь с таким логином уже существует.')
+            raise ValidationError(
+                'Пользователь с таким логином уже существует.'
+            )
 
         return username
 
@@ -70,7 +72,9 @@ class DocumentsLoginForm(forms.Form):
         if user is None or not user.check_password(password):
             raise ValidationError('Неверный логин или пароль.')
 
+        cleaned_data['username'] = username
         cleaned_data['user'] = user
+
         return cleaned_data
 
 
@@ -90,10 +94,12 @@ class DocumentFolderForm(forms.ModelForm):
         name = self.cleaned_data['name'].strip()
 
         if DocumentFolder.objects.filter(
-                user=self.user,
-                name__iexact=name,
+            user=self.user,
+            name__iexact=name,
         ).exists():
-            raise ValidationError('Папка с таким названием уже существует.')
+            raise ValidationError(
+                'Папка с таким названием уже существует.'
+            )
 
         return name
 
@@ -109,7 +115,9 @@ class DocumentUploadForm(forms.Form):
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['folder'].queryset = DocumentFolder.objects.filter(user=user)
+        self.fields['folder'].queryset = DocumentFolder.objects.filter(
+            user=user,
+        )
 
 
 class DocumentSelectionForm(forms.Form):

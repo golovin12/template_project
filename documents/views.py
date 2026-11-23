@@ -1,3 +1,4 @@
+from asgiref.sync import sync_to_async
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -58,50 +59,87 @@ def _render_index(
     })
 
 
-def register(request):
+def _validate_form(form_class, *args, **kwargs):
+    form = form_class(*args, **kwargs)
+    return form, form.is_valid()
+
+
+def _save_registration(form):
+    with transaction.atomic():
+        return form.save()
+
+
+def _get_selected_file_ids(form):
+    return list(form.cleaned_data['files'].values_list('pk', flat=True))
+
+
+@sync_to_async
+def _open_document(document):
+    return open_document(document)
+
+
+@documents_login_required
+async def register(request):
     if request.documents_user is not None:
         return redirect('documents:index')
 
-    form = DocumentsRegistrationForm(request.POST or None)
+    form, is_valid = await sync_to_async(_validate_form)(
+        DocumentsRegistrationForm,
+        request.POST or None,
+    )
 
-    if request.method == 'POST' and form.is_valid():
+    if request.method == 'POST' and is_valid:
         try:
-            with transaction.atomic():
-                user = form.save()
+            user = await sync_to_async(_save_registration)(form)
         except IntegrityError:
             form.add_error(
                 'username',
                 'Пользователь с таким логином уже существует.',
             )
         else:
-            request.session.cycle_key()
-            request.session[DocumentsUserMiddleware.session_key] = user.pk
+            await request.session.acycle_key()
+            await request.session.aset(
+                DocumentsUserMiddleware.session_key,
+                user.pk,
+            )
             return redirect('documents:index')
 
-    return render(request, 'documents/register.html', {'form': form})
+    return await sync_to_async(render)(
+        request,
+        'documents/register.html',
+        {'form': form},
+    )
 
 
-def login(request):
+async def login(request):
     if request.documents_user is not None:
         return redirect('documents:index')
 
-    form = DocumentsLoginForm(request.POST or None)
+    form, is_valid = await sync_to_async(_validate_form)(
+        DocumentsLoginForm,
+        request.POST or None,
+    )
 
-    if request.method == 'POST' and form.is_valid():
-        request.session.cycle_key()
-        request.session[DocumentsUserMiddleware.session_key] = (
-            form.cleaned_data['user'].pk
+    if request.method == 'POST' and is_valid:
+        await request.session.acycle_key()
+        await request.session.aset(
+            DocumentsUserMiddleware.session_key,
+            form.cleaned_data['user'].pk,
         )
         return redirect('documents:index')
 
-    return render(request, 'documents/login.html', {'form': form})
+    return await sync_to_async(render)(
+        request,
+        'documents/login.html',
+        {'form': form},
+    )
 
 
 @require_POST
 @documents_login_required
-def logout(request):
-    request.session.pop(DocumentsUserMiddleware.session_key, None)
-    request.session.cycle_key()
+async def logout(request):
+    await request.session.apop(DocumentsUserMiddleware.session_key, None)
+    await request.session.acycle_key()
 
     messages.success(request, 'Вы вышли из своего аккаунта.')
 
@@ -109,34 +147,38 @@ def logout(request):
 
 
 @documents_login_required
-def index(request):
+async def index(request):
     user = request.documents_user
     folder_id = request.GET.get('folder')
     current_folder = None
 
     if folder_id:
-        current_folder = DocumentFolder.objects.filter(
+        current_folder = await DocumentFolder.objects.filter(
             pk=folder_id,
             user=user,
-        ).first()
+        ).afirst()
 
         if current_folder is None:
             return redirect('documents:index')
 
-    return _render_index(request, current_folder=current_folder)
+    return await sync_to_async(_render_index)(
+        request,
+        current_folder=current_folder,
+    )
 
 
 @require_POST
 @documents_login_required
-def folder_create(request):
-    form = DocumentFolderForm(
+async def folder_create(request):
+    form, is_valid = await sync_to_async(_validate_form)(
+        DocumentFolderForm,
         request.POST,
         user=request.documents_user,
     )
 
-    if form.is_valid():
+    if is_valid:
         try:
-            create_folder(
+            await create_folder(
                 request.documents_user,
                 form.cleaned_data['name'],
             )
@@ -146,7 +188,7 @@ def folder_create(request):
             messages.success(request, 'Папка создана.')
             return redirect('documents:index')
 
-    return _render_index(
+    return await sync_to_async(_render_index)(
         request,
         folder_form=form,
     )
@@ -154,18 +196,19 @@ def folder_create(request):
 
 @require_POST
 @documents_login_required
-def file_upload(request):
-    form = DocumentUploadForm(
+async def file_upload(request):
+    form, is_valid = await sync_to_async(_validate_form)(
+        DocumentUploadForm,
         request.POST,
         request.FILES,
         user=request.documents_user,
     )
 
-    if form.is_valid():
+    if is_valid:
         folder = form.cleaned_data['folder']
 
         try:
-            upload_file(
+            await upload_file(
                 user=request.documents_user,
                 uploaded_file=form.cleaned_data['file'],
                 folder_id=folder.pk if folder else None,
@@ -176,11 +219,13 @@ def file_upload(request):
             messages.success(request, 'Файл загружен.')
 
             if folder:
-                return redirect(f'{reverse("documents:index")}?folder={folder.pk}')
+                return redirect(
+                    f'{reverse("documents:index")}?folder={folder.pk}'
+                )
 
             return redirect('documents:index')
 
-    return _render_index(
+    return await sync_to_async(_render_index)(
         request,
         upload_form=form,
     )
@@ -188,9 +233,9 @@ def file_upload(request):
 
 @require_POST
 @documents_login_required
-def file_delete(request, file_id):
+async def file_delete(request, file_id):
     try:
-        delete_file(request.documents_user, file_id)
+        await delete_file(request.documents_user, file_id)
     except ValidationError:
         messages.error(request, 'Файл не найден.')
     else:
@@ -200,15 +245,17 @@ def file_delete(request, file_id):
 
 
 @documents_login_required
-def file_download(request, file_id):
+async def file_download(request, file_id):
     try:
-        document = get_user_document(request.documents_user, file_id)
+        document = await get_user_document(request.documents_user, file_id)
     except ValidationError:
         messages.error(request, 'Файл не найден.')
         return redirect('documents:index')
 
+    file_object = await _open_document(document)
+
     return FileResponse(
-        open_document(document),
+        file_object,
         as_attachment=True,
         filename=document.original_name,
     )
@@ -216,22 +263,21 @@ def file_download(request, file_id):
 
 @require_POST
 @documents_login_required
-def files_download(request):
-    form = DocumentSelectionForm(
+async def files_download(request):
+    form, is_valid = await sync_to_async(_validate_form)(
+        DocumentSelectionForm,
         request.POST,
         user=request.documents_user,
     )
 
-    if not form.is_valid():
+    if not is_valid:
         messages.error(request, 'Выбери файлы для скачивания.')
         return redirect('documents:index')
 
-    file_ids = list(
-        form.cleaned_data['files'].values_list('pk', flat=True)
-    )
+    file_ids = await sync_to_async(_get_selected_file_ids)(form)
 
     try:
-        return create_zip_response(request.documents_user, file_ids)
+        return await create_zip_response(request.documents_user, file_ids)
     except ValidationError as error:
         messages.error(request, error.messages[0])
         return redirect('documents:index')

@@ -1,36 +1,34 @@
-from pathlib import Path
-
+from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 
-from .image import compress_image
+from common_tools.images import acompress_image
 from .models import DocumentFile, DocumentFolder
 
 
-def create_folder(user, name):
+async def create_folder(user, name):
     name = name.strip()
 
     if not name:
         raise ValidationError('Название папки не может быть пустым.')
 
     try:
-        with transaction.atomic():
-            return DocumentFolder.objects.create(
-                user=user,
-                name=name,
-            )
+        return await DocumentFolder.objects.acreate(
+            user=user,
+            name=name,
+        )
     except IntegrityError:
         raise ValidationError('Папка с таким названием уже существует.')
 
 
-def upload_file(user, uploaded_file, folder_id=None):
+async def upload_file(user, uploaded_file, folder_id=None):
     folder = None
 
     if folder_id:
-        folder = DocumentFolder.objects.filter(
+        folder = await DocumentFolder.objects.filter(
             pk=folder_id,
             user=user,
-        ).first()
+        ).afirst()
 
         if folder is None:
             raise ValidationError('Указанная папка не найдена.')
@@ -41,7 +39,7 @@ def upload_file(user, uploaded_file, folder_id=None):
     if not original_name:
         raise ValidationError('Некорректное имя файла.')
 
-    processed_file = compress_image(uploaded_file)
+    processed_file = await acompress_image(uploaded_file)
 
     document = DocumentFile(
         user=user,
@@ -50,26 +48,27 @@ def upload_file(user, uploaded_file, folder_id=None):
         size=processed_file.size,
     )
 
-    document.file.save(
-        Path(original_name).name,
+    await sync_to_async(document.file.save)(
+        original_name,
         processed_file,
         save=False,
     )
-    document.save()
+
+    await document.asave()
 
     return document
 
 
-def delete_file(user, file_id):
-    document = DocumentFile.objects.filter(
+async def delete_file(user, file_id):
+    document = await DocumentFile.objects.filter(
         pk=file_id,
         user=user,
-    ).first()
+    ).afirst()
 
     if document is None:
         raise ValidationError('Файл не найден.')
 
-    document.file.delete(save=False)
-    document.delete()
+    await sync_to_async(document.file.delete)(save=False)
+    await document.adelete()
 
     return document

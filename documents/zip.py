@@ -1,59 +1,73 @@
-from tempfile import SpooledTemporaryFile
-from zipfile import ZIP_DEFLATED, ZipFile
+from urllib.parse import quote
 
 from django.core.exceptions import ValidationError
-from django.http import FileResponse
+from django.http import StreamingHttpResponse
 
+from common_tools.async_files import generate_zip, storage_client
 from .models import DocumentFile
 
 
-def create_zip_response(user, file_ids):
-    documents = list(
-        DocumentFile.objects.filter(
+async def create_zip_response(user, file_ids):
+    file_ids = list(file_ids)
+
+    if not file_ids:
+        raise ValidationError('Не выбраны файлы для скачивания.')
+
+    if len(file_ids) != len(set(file_ids)):
+        raise ValidationError('Некорректный список файлов.')
+
+    documents = [
+        document
+        async for document in DocumentFile.objects.filter(
             user=user,
             pk__in=file_ids,
-        )
-    )
+        ).aiterator()
+    ]
 
     if not documents:
         raise ValidationError('Не выбраны файлы для скачивания.')
 
-    if len(documents) != len(set(file_ids)):
+    if len(documents) != len(file_ids):
         raise ValidationError('Некоторые файлы не найдены.')
 
-    archive_file = SpooledTemporaryFile(max_size=8 * 1024 * 1024)
+    async def files():
+        used_names = set()
 
-    try:
-        with ZipFile(archive_file, 'w', compression=ZIP_DEFLATED) as archive:
-            used_names = set()
+        for document in documents:
+            archive_name = document.original_name
+            candidate = archive_name
+            index = 1
 
-            for document in documents:
-                archive_name = document.original_name
-                candidate = archive_name
-                index = 1
+            while candidate.lower() in used_names:
+                path = document.original_name.rsplit('.', 1)
 
-                while candidate.lower() in used_names:
-                    path = document.original_name.rsplit('.', 1)
-                    if len(path) == 2:
-                        candidate = f'{path[0]} ({index}).{path[1]}'
-                    else:
-                        candidate = f'{archive_name} ({index})'
+                if len(path) == 2:
+                    candidate = f'{path[0]} ({index}).{path[1]}'
+                else:
+                    candidate = f'{archive_name} ({index})'
 
-                    index += 1
+                index += 1
 
-                used_names.add(candidate.lower())
+            used_names.add(candidate.lower())
 
-                with document.file.open('rb') as source:
-                    archive.writestr(candidate, source.read())
+            yield {
+                'name': document.file.name,
+                'archive_name': candidate,
+            }
 
-        archive_file.seek(0)
+    async def stream():
+        async with storage_client() as s3:
+            async for chunk in generate_zip(files(), s3):
+                yield chunk
 
-        return FileResponse(
-            archive_file,
-            as_attachment=True,
-            filename='documents.zip',
-            content_type='application/zip',
-        )
-    except Exception:
-        archive_file.close()
-        raise
+    response = StreamingHttpResponse(
+        stream(),
+        content_type='application/zip',
+    )
+
+    response['Content-Disposition'] = (
+        'attachment; filename="documents.zip"; '
+        f"filename*=UTF-8''{quote('documents.zip')}"
+    )
+
+    return response
