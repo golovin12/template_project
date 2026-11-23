@@ -70,7 +70,7 @@ INSTALLED_APPS = [
     'django_select2',
     'storages',
 
-    'promoter_app',
+    'documents',
     'apps.bookkeeping',
     'apps.notifications',
     'apps.service_requests',
@@ -86,6 +86,7 @@ OPTIONS = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'documents.middleware.DocumentsUserMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

@@ -17,8 +17,8 @@ class DashboardFilterForm(BaseFilterForm):
     city = forms.ChoiceField(choices=())
 
     def __init__(self, request: OrganizationRequest):
+        self.base_fields['city'] = CachedCityChoiceField(request=request)
         super().__init__(request)
-        self.fields['city'] = CachedCityChoiceField(request=request)
 
     def _filtration(self, qs: QuerySet[City]):
         cd = self.cleaned_data
@@ -53,8 +53,8 @@ class AccountingEntryFilterForm(BranchControlFilterMixin, BaseFilterForm, forms.
         widgets = {'description': forms.TextInput()}
 
     def __init__(self, request: OrganizationRequest, *args, **kwargs):
+        self.base_fields['city'] = CachedCityChoiceField(request=request)
         super().__init__(*args, request=request, **kwargs)
-        self.fields['city'] = CachedCityChoiceField(request=request)
         self.fields['number'].widget.attrs['style'] = 'max-width: 10em'
 
         if self.fields['city'].disabled:

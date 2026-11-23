@@ -4,6 +4,7 @@ from int.db_context import DatabaseContext
 class OrganizationRouter:
     AUTH_APPS = {
         'identity',
+        'documents',
 
         'admin',
         'auth',
