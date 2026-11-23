@@ -59,8 +59,7 @@ class AccountingEntryListView(UserCityControlMixin, ChiefRequiredMixin, FilterSi
             qs = self.get_queryset()[:2500]
             filter_text = (self.filter_text or 'все')[:150]
             file_name = 'Бухгалтерия от {dt}, {filter_text}.xlsx'.format(
-                dt=datetime.now().strftime('%d.%m.%Y %H.%M'),
-                filter_text=filter_text)
+                dt=datetime.now().strftime('%d.%m.%Y %H.%M'), filter_text=filter_text)
             return attachment_response(request, excel.accounting_entry_list(qs).get_bytes_buffer(), file_name)
 
         return super().get(request, *args, **kwargs)

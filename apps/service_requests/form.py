@@ -20,14 +20,6 @@ class CachedDeviceTypeChoiceHelper:
         for branch_id in self.current_branch_ids or []:
             allowed_choices.update(DeviceType.get_names(branch_id))
 
-        if allowed_choices:
-            return allowed_choices
-        elif self.user.all_cities_access:
-            return DeviceType.get_names()
-
-        for branch_id in self.user.allowed_branch_ids:
-            allowed_choices.update(DeviceType.get_names(branch_id))
-
         return allowed_choices
 
 

@@ -19,16 +19,12 @@ class OrganizationUserFieldsMixin(forms.Form):
     all_cities_access = forms.BooleanField(
         label='Доступ ко всем городам', required=False,
         help_text='Поставьте галочку, если пользователь должен иметь доступ ко всем городам.')
-    is_act_creation_access = forms.BooleanField(
-        label='Доступ к созданию актов', required=False,
-        help_text='Поставьте галочку, если пользователь должен иметь доступ к созданию актов.')
     role = forms.ChoiceField(choices=USER_ROLES.choices, label='Роль', required=False,
                              widget=Select2Widget(attrs={'style': 'opacity: 0'}))
 
     @staticmethod
     def save_organization_user(user: OrganizationUser, cleaned_data: dict):
         user.all_cities_access = cleaned_data.get('all_cities_access', False)
-        user.is_act_creation_access = cleaned_data.get('is_act_creation_access', False)
         user.role = cleaned_data.get('role', '')
         user.sync_and_save()
 
