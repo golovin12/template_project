@@ -1,3 +1,4 @@
+from asgiref.sync import async_to_sync
 from io import BytesIO
 from zipfile import ZipFile
 
@@ -8,6 +9,12 @@ from django.test import TestCase
 from documents.controllers import upload_file
 from documents.models import DocumentsUser
 from documents.zip import create_zip_response
+
+
+async def read_stream(response):
+    return b''.join([
+        chunk async for chunk in response.streaming_content
+    ])
 
 
 class DocumentZipTests(TestCase):
@@ -23,26 +30,29 @@ class DocumentZipTests(TestCase):
             document.file.delete(save=False)
 
     def test_archive_contains_selected_files(self):
-        first = upload_file(
+        first = async_to_sync(upload_file)(
             self.user,
             SimpleUploadedFile('first.txt', b'first'),
+            folder_id=None,
         )
-        second = upload_file(
+        second = async_to_sync(upload_file)(
             self.user,
             SimpleUploadedFile('second.txt', b'second'),
+            folder_id=None,
         )
-        upload_file(
+        async_to_sync(upload_file)(
             self.another_user,
             SimpleUploadedFile('another.txt', b'another'),
+            folder_id=None,
         )
 
-        response = create_zip_response(
+        response = async_to_sync(create_zip_response)(
             self.user,
             [first.pk, second.pk],
         )
 
         try:
-            content = b''.join(response.streaming_content)
+            content = async_to_sync(read_stream)(response)
         finally:
             response.close()
 
@@ -55,10 +65,34 @@ class DocumentZipTests(TestCase):
             self.assertEqual(archive.read('second.txt'), b'second')
 
     def test_archive_rejects_another_users_file(self):
-        document = upload_file(
+        document = async_to_sync(upload_file)(
             self.another_user,
             SimpleUploadedFile('another.txt', b'another'),
+            folder_id=None,
         )
 
         with self.assertRaises(ValidationError):
-            create_zip_response(self.user, [document.pk])
+            async_to_sync(create_zip_response)(
+                self.user,
+                [document.pk],
+            )
+
+    def test_archive_rejects_empty_selection(self):
+        with self.assertRaises(ValidationError):
+            async_to_sync(create_zip_response)(
+                self.user,
+                [],
+            )
+
+    def test_archive_rejects_duplicate_ids(self):
+        document = async_to_sync(upload_file)(
+            self.user,
+            SimpleUploadedFile('test.txt', b'content'),
+            folder_id=None,
+        )
+
+        with self.assertRaises(ValidationError):
+            async_to_sync(create_zip_response)(
+                self.user,
+                [document.pk, document.pk],
+            )

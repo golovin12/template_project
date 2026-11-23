@@ -3,6 +3,10 @@ from django.core.exceptions import ValidationError
 from .models import DocumentFile
 
 
+def open_document(document):
+    return document.file.open('rb')
+
+
 async def get_user_document(user, file_id):
     document = await DocumentFile.objects.filter(
         pk=file_id,

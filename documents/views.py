@@ -2,9 +2,10 @@ from asgiref.sync import sync_to_async
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.http import FileResponse
+from django.http import StreamingHttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.http import content_disposition_header
 from django.views.decorators.http import require_POST
 
 from .auth import documents_login_required
@@ -18,16 +19,16 @@ from .forms import (
 )
 from .middleware import DocumentsUserMiddleware
 from .models import DocumentFile, DocumentFolder
-from .storage import get_user_document, open_document
+from .storage import get_user_document
 from .zip import create_zip_response
 
 
 def _render_index(
-    request,
-    current_folder=None,
-    folder_form=None,
-    upload_form=None,
-    selection_form=None,
+        request,
+        current_folder=None,
+        folder_form=None,
+        upload_form=None,
+        selection_form=None,
 ):
     user = request.documents_user
 
@@ -73,12 +74,30 @@ def _get_selected_file_ids(form):
     return list(form.cleaned_data['files'].values_list('pk', flat=True))
 
 
-@sync_to_async
 def _open_document(document):
-    return open_document(document)
+    return document.file.open('rb')
 
 
-@documents_login_required
+@sync_to_async
+def _open_document_async(document):
+    return _open_document(document)
+
+
+async def _file_iterator(file_object):
+    try:
+        while True:
+            chunk = await sync_to_async(file_object.read)(
+                64 * 1024,
+            )
+
+            if not chunk:
+                break
+
+            yield chunk
+    finally:
+        await sync_to_async(file_object.close)()
+
+
 async def register(request):
     if request.documents_user is not None:
         return redirect('documents:index')
@@ -108,6 +127,9 @@ async def register(request):
         request,
         'documents/register.html',
         {'form': form},
+        content_type=None,
+        using=None,
+        status=None,
     )
 
 
@@ -132,13 +154,19 @@ async def login(request):
         request,
         'documents/login.html',
         {'form': form},
+        content_type=None,
+        using=None,
+        status=None,
     )
 
 
 @require_POST
 @documents_login_required
 async def logout(request):
-    await request.session.apop(DocumentsUserMiddleware.session_key, None)
+    await request.session.apop(
+        DocumentsUserMiddleware.session_key,
+        None,
+    )
     await request.session.acycle_key()
 
     messages.success(request, 'Вы вышли из своего аккаунта.')
@@ -164,6 +192,9 @@ async def index(request):
     return await sync_to_async(_render_index)(
         request,
         current_folder=current_folder,
+        upload_form=None,
+        folder_form=None,
+        selection_form=None,
     )
 
 
@@ -191,6 +222,9 @@ async def folder_create(request):
     return await sync_to_async(_render_index)(
         request,
         folder_form=form,
+        upload_form=None,
+        current_folder=None,
+        selection_form=None,
     )
 
 
@@ -228,6 +262,9 @@ async def file_upload(request):
     return await sync_to_async(_render_index)(
         request,
         upload_form=form,
+        folder_form=None,
+        current_folder=None,
+        selection_form=None,
     )
 
 
@@ -247,18 +284,26 @@ async def file_delete(request, file_id):
 @documents_login_required
 async def file_download(request, file_id):
     try:
-        document = await get_user_document(request.documents_user, file_id)
+        document = await get_user_document(
+            request.documents_user,
+            file_id,
+        )
     except ValidationError:
         messages.error(request, 'Файл не найден.')
         return redirect('documents:index')
 
-    file_object = await _open_document(document)
+    file_object = await _open_document_async(document)
 
-    return FileResponse(
-        file_object,
-        as_attachment=True,
-        filename=document.original_name,
+    response = StreamingHttpResponse(
+        _file_iterator(file_object),
+        content_type='application/octet-stream',
     )
+    response['Content-Disposition'] = content_disposition_header(
+        True,
+        document.original_name,
+    )
+
+    return response
 
 
 @require_POST
@@ -277,7 +322,10 @@ async def files_download(request):
     file_ids = await sync_to_async(_get_selected_file_ids)(form)
 
     try:
-        return await create_zip_response(request.documents_user, file_ids)
+        return await create_zip_response(
+            request.documents_user,
+            file_ids,
+        )
     except ValidationError as error:
         messages.error(request, error.messages[0])
         return redirect('documents:index')
