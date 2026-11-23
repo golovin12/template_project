@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView, DetailView, FormView
 
-from accounts.base import ZoneWSGIRequest
+from accounts.base import OrganizationRequest
 from accounts.mixins import ForSuperUserMixin
 from apps.bookkeeping.models import AccountingEntry
 from common_tools.markdown import load_and_render_md
@@ -261,7 +261,7 @@ class AssignmentDetailView(auth.PromoTreckRequiredMixin, DetailView):
 class SaveRoutesApiView(auth.PromoTreckRequiredMixin, View):
     """Api для изменения маршрутов"""
 
-    def post(self, request: ZoneWSGIRequest, *args, **kwargs):
+    def post(self, request: OrganizationRequest, *args, **kwargs):
         data = json.loads(request.body)
 
         routes = data.get('routes', [])
@@ -298,7 +298,7 @@ class SaveRoutesApiView(auth.PromoTreckRequiredMixin, View):
 class AssignPromoRouteApiView(auth.PromoTreckRequiredMixin, View):
     """Api для назначения промоутеров на маршрут"""
 
-    def post(self, request: ZoneWSGIRequest, *args, **kwargs):
+    def post(self, request: OrganizationRequest, *args, **kwargs):
         data = json.loads(request.body)
         route_ids = data.get('route_ids', [])
         promoter_id = data.get('promoter_id')
@@ -330,7 +330,7 @@ class AssignPromoRouteApiView(auth.PromoTreckRequiredMixin, View):
 class AssignmentConfirmView(auth.PromoTreckRequiredMixin, View):
     """Подтверждение окончания маршрута"""
 
-    def post(self, request: ZoneWSGIRequest, pk: int, *args, **kwargs):
+    def post(self, request: OrganizationRequest, pk: int, *args, **kwargs):
         assignment = get_object_or_404(models.PromoterAssignment.objects.select_related('route_zone'), pk=pk)
         auth.PromoAccessChecker.check_assignment_or_404(assignment, self.city)
 
@@ -347,7 +347,7 @@ class AssignmentConfirmView(auth.PromoTreckRequiredMixin, View):
                         f'Фото: {assignment.total_photos}',
             city_id=assignment.route_zone.city_id,
             expense_subtype=AccountingEntry.EXPENSE_SUBTYPE.PROMO,
-            created_by=self.request.user.zone_profile
+            created_by=self.request.user.organization_user
         )
         messages.success(request, 'Маршрут успешно подтверждён, запись в бухгалтерию добавлена.')
         return JsonResponse({'status': 'success'})
@@ -356,7 +356,7 @@ class AssignmentConfirmView(auth.PromoTreckRequiredMixin, View):
 class AssignmentCancelView(auth.PromoTreckRequiredMixin, View):
     """Отмена назначения промоутера"""
 
-    def post(self, request: ZoneWSGIRequest, pk: int, *args, **kwargs):
+    def post(self, request: OrganizationRequest, pk: int, *args, **kwargs):
         assignment = get_object_or_404(models.PromoterAssignment.objects.select_related('route_zone'), pk=pk)
         auth.PromoAccessChecker.check_assignment_or_404(assignment, self.city)
 
@@ -395,7 +395,7 @@ class PromotersListView(auth.PromoTreckRequiredMixin, FilterSingleTableView):
 class PromoterCreateView(auth.PromoTreckRequiredMixin, View):
     """Создание промоутера"""
 
-    def post(self, request: ZoneWSGIRequest, *args, **kwargs):
+    def post(self, request: OrganizationRequest, *args, **kwargs):
         nickname = request.POST.get('nickname', '').strip()
 
         if not nickname:
@@ -413,7 +413,7 @@ class PromoterCreateView(auth.PromoTreckRequiredMixin, View):
 class PromoterUpdateView(auth.PromoTreckRequiredMixin, View):
     """Обновление данных промоутера"""
 
-    def post(self, request: ZoneWSGIRequest, pk: int, *args, **kwargs):
+    def post(self, request: OrganizationRequest, pk: int, *args, **kwargs):
         promoter = get_object_or_404(models.PromoterProfile, pk=pk)
         auth.PromoAccessChecker.check_promoter_or_404(promoter, self.city)
 
@@ -432,7 +432,7 @@ class PromoterUpdateView(auth.PromoTreckRequiredMixin, View):
 class PromoterDeleteView(auth.PromoTreckRequiredMixin, View):
     """Удаление промоутера"""
 
-    def post(self, request: ZoneWSGIRequest, pk: int, *args, **kwargs):
+    def post(self, request: OrganizationRequest, pk: int, *args, **kwargs):
         promoter = get_object_or_404(models.PromoterProfile, pk=pk)
         auth.PromoAccessChecker.check_promoter_or_404(promoter, self.city)
 
@@ -445,7 +445,7 @@ class PromoterDeleteView(auth.PromoTreckRequiredMixin, View):
 class PromoterLogoutView(auth.PromoTreckRequiredMixin, View):
     """Обновления ключа промоутера"""
 
-    def post(self, request: ZoneWSGIRequest, pk: int, *args, **kwargs):
+    def post(self, request: OrganizationRequest, pk: int, *args, **kwargs):
         promoter = get_object_or_404(models.PromoterProfile, pk=pk)
         auth.PromoAccessChecker.check_promoter_or_404(promoter, self.city)
 
@@ -456,7 +456,7 @@ class PromoterLogoutView(auth.PromoTreckRequiredMixin, View):
 class PromoterQrView(auth.PromoTreckRequiredMixin, View):
     """Получение данных для QR-кода (для входа промоутера)"""
 
-    def get(self, request: ZoneWSGIRequest, pk: int, *args, **kwargs):
+    def get(self, request: OrganizationRequest, pk: int, *args, **kwargs):
         promoter = get_object_or_404(models.PromoterProfile, pk=pk)
         auth.PromoAccessChecker.check_promoter_or_404(promoter, self.city)
 
