@@ -1,6 +1,5 @@
 {% extends "int/base.html" %}
 {% load static %}
-{% load bootstrap4 %}
 
 {% block title %}Статистика города {{ object }}{% endblock %}
 
@@ -107,13 +106,14 @@
             {% endif %}
         {% endfor %}
     </div>
+    {{ statistics|json_script:"statistics-data" }}
 {% endblock %}
 
 {% block extrascript %}
     <script src="{% static 'int/lib/chartjs-2.9.3/js/chart.min.js' %}"></script>
     <script src="{% static "int/lib/chartjs-2.9.3/js/chartjs-plugin-datalabels.min.js" %}"></script>
     <script>
-        const statistics = JSON.parse(`{{ statistics|safe }}`);
+        const statistics = JSON.parse(document.getElementById('statistics-data').textContent);
 
         function formatNumber(value) {
             let num = parseFloat(value) || 0;
@@ -447,7 +447,7 @@
 
             let cityRow = $('<tr></tr>').addClass('table-primary');
             let cityNameCell = $('<td class="p-1"></td>');
-            cityNameCell.html('<strong>' + efficiencyData.city.name + '</strong>');
+            cityNameCell.append($('<strong></strong>').text(efficiencyData.city.name));
             cityRow.append(cityNameCell);
 
             cityRow.append(createWeekCell(
@@ -478,7 +478,7 @@
                 let branchRow = $('<tr></tr>');
 
                 let branchNameCell = $('<td class="p-1"></td>');
-                branchNameCell.html(branch.name);
+                branchNameCell.text(branch.name);
                 branchRow.append(branchNameCell);
 
                 branchRow.append(createWeekCell(
