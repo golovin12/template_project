@@ -97,7 +97,7 @@ class NotificationSender:
     def send_message(self, message: NotificationMessage) -> bool:
         provider_enum = message.provider
         provider = ProviderRegistry.get(provider_enum)
-        limiter = self.rate_limiters.get(provider)
+        limiter = self.rate_limiters.get(provider_enum)
 
         if isinstance(limiter, TelegramRateLimiter):
             if not limiter.can_send(message.recipient_id):
