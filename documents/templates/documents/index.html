@@ -1,0 +1,193 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Мои документы{% endblock %}
+
+{% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-1">Мои документы</h3>
+            <span class="text-muted">{{ request.documents_user.username }}</span>
+        </div>
+
+        <form method="post" action="{% url 'documents:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary">Выйти</button>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-3">
+                <div class="card-header">Папки</div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'documents:index' %}"
+                       class="list-group-item list-group-item-action {% if not current_folder %}active{% endif %}">
+                        Все файлы
+                    </a>
+
+                    {% for folder in folders %}
+                        <a href="{% url 'documents:index' %}?folder={{ folder.pk }}"
+                           class="list-group-item list-group-item-action {% if current_folder.pk == folder.pk %}active{% endif %}">
+                            {{ folder.name }}
+                        </a>
+                    {% empty %}
+                        <div class="list-group-item text-muted">
+                            Папок пока нет
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Создать папку</div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'documents:folder_create' %}">
+                        {% csrf_token %}
+
+                        {% if folder_form.non_field_errors %}
+                            <div class="text-danger mb-2">
+                                {{ folder_form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        {% for field in folder_form %}
+                            <div class="form-group">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% for error in field.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            Создать
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card mb-3">
+                <div class="card-header">
+                    {% if current_folder %}
+                        {{ current_folder.name }}
+                    {% else %}
+                        Все файлы
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+                    <form method="post" action="{% url 'documents:file_upload' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if upload_form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ upload_form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="form-row align-items-end">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    {{ upload_form.file.label_tag }}
+                                    {{ upload_form.file }}
+                                    {% for error in upload_form.file.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ upload_form.folder.label_tag }}
+                                    {{ upload_form.folder }}
+                                    {% for error in upload_form.folder.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary btn-block mb-3">
+                                    Загрузить
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <form id="zip-form"
+                  method="post"
+                  action="
+
+
+
+                          {% url 'documents:files_download' %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-primary btn-sm mb-2">
+                    Скачать выбранные ZIP
+                </button>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Название</th>
+                        <th>Дата загрузки</th>
+                        <th>Размер</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for document in files %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="files" value="{{ document.pk }}" form="zip-form">
+                            </td>
+                            <td>
+                                <a href="{% url 'documents:file_download' document.pk %}">
+                                    {{ document.original_name }}
+                                </a>
+                            </td>
+                            <td>{{ document.created_at|date:"d.m.Y H:i" }}</td>
+                            <td>{{ document.size|filesizeformat }}</td>
+                            <td class="text-right">
+                                <form method="post"
+                                      action="{% url 'documents:file_delete' document.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                                            onclick="return confirm('Удалить файл?')">
+                                        Удалить
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                В этой папке пока нет файлов.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
