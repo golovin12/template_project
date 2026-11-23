@@ -16,7 +16,7 @@
         </a>
     </li>
     <li class="breadcrumb-item">
-        {{ svc_request }} {% if show_private_data %}[Кем создана: {% firstof svc_request.created_by "—" %}]{% endif %}
+        {{ svc_request }} {% if is_manager %}[Кем создана: {% firstof svc_request.created_by "—" %}]{% endif %}
     </li>
 {% endblock %}
 
@@ -55,7 +55,7 @@
             {% include 'service_request/block/request_detail.html' %}
 
             <div class="d-flex justify-content-center justify-content-md-between flex-wrap">
-                {% if can_change_svc_status and not svc_request.is_status_end %}
+                {% if not svc_request.is_status_end %}
                     <button type="button" class="btn btn-outline-dark action-btn" id="cancelRequestBtn"
                             data-toggle="modal" data-target="#confirmCancelModal">
                         <i class="material-icons align-bottom">block</i> Отменить заявку
@@ -96,12 +96,12 @@
                    class="btn btn-outline-info ml-auto py-2 px-5 my-2">
                     <i class="material-icons align-bottom">difference</i> Создать копию заявки
                 </a>
-            {% elif admin_role_form %}
+            {% elif city_admin_form %}
                 <button type="button" class="btn btn-outline-warning action-btn py-2 px-5 my-2" data-toggle="modal"
-                        data-target="#adminUpdateRequestModal">
+                        data-target="#cityAdminUpdateRequestModal">
                     <i class="material-icons align-bottom">edit</i> Редактировать
                 </button>
-            {% elif can_edit_svc_request %}
+            {% else %}
                 <a href="{% url 'service_request:request_update' svc_request.pk %}"
                    class="btn btn-outline-warning action-btn py-2 px-5 my-2">
                     <i class="material-icons align-bottom">edit</i> Редактировать

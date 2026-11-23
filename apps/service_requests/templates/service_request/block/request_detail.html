@@ -17,14 +17,6 @@
         </p>
         <div class="row">
             <p class="col"><strong>Телефон:</strong> {{ svc_request|client_phone_for_user:request.user.organization_user }}</p>
-            <div class="col-auto">
-                {% if not svc_request.is_status_end and can_change_svc_status and not svc_request.needs_call %}
-                    <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal"
-                            data-target="#needsCallModal">
-                        <i class="material-icons align-bottom">perm_phone_msg</i> Нужен прозвон
-                    </button>
-                {% endif %}
-            </div>
         </div>
         <p><strong>Тип техники:</strong> {{ svc_request.device_type }}</p>
         <p style="line-height: 1">

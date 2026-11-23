@@ -258,7 +258,7 @@ class ServiceRequest(models.Model):
         return self.time_to_service.strftime('%d.%m.%Y %H:%M')
 
     def get_sd_closing_date_display(self) -> str:
-        return self.time_to_service.strftime('%d.%m.%Y')
+        return self.sd_closing_date.strftime('%d.%m.%Y')
 
     def get_other_expenses_display(self) -> str:
         return '—' if self.other_expenses is None else f'{format_money(self.other_expenses)} руб.'

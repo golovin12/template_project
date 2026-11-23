@@ -1,6 +1,10 @@
 $(function () {
+    const deviceTypeBranches = JSON.parse(
+        document.getElementById('device-type-branches').textContent
+    );
+
     let allBranchOptions = [];
-    $('#id_branch option').each(function() {
+    $('#id_branch option').each(function () {
         let value = $(this).val();
         if (value) {
             allBranchOptions.push({
@@ -17,16 +21,16 @@ $(function () {
         let selectedBranchId = branchSelect.val();
 
         branchSelect.empty().append('<option value="">---------</option>');
-        
+
         let branchesToAdd = [];
-        
+
         if (deviceTypeName) {
             let branchesForDevice = deviceTypeBranches[deviceTypeName];
 
             if (branchesForDevice === 'all') {
                 branchesToAdd = allBranchOptions;
             } else if (Array.isArray(branchesForDevice)) {
-                branchesToAdd = allBranchOptions.filter(option => 
+                branchesToAdd = allBranchOptions.filter(option =>
                     branchesForDevice.includes(parseInt(option.value))
                 );
             }
@@ -36,7 +40,7 @@ $(function () {
 
         $.each(branchesToAdd, function (_, branch) {
             branchSelect.append(
-                `<option value="${branch.value}">${branch.text}</option>`
+                $('<option>').val(branch.value).text(branch.text)
             );
         });
 
@@ -44,9 +48,7 @@ $(function () {
             branchesToAdd.some(branch => String(branch.value) === String(selectedBranchId))
         ) {
             branchSelect.val(selectedBranchId);
-        } 
-
-        else if (branchesToAdd.length === 1) {
+        } else if (branchesToAdd.length === 1) {
             branchSelect.val(branchesToAdd[0].value);
         }
 

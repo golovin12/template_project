@@ -96,8 +96,6 @@
             })
         })
     </script>
-    <script>
-        const deviceTypeBranches = {{ device_type_branches|safe }};
-    </script>
+    {{ device_type_branches|json_script:"device-type-branches" }}
     <script src="{% static 'service_request/js/filter_branch_by_device_type.js' %}"></script>
 {% endblock %}

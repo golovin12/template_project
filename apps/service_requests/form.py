@@ -73,10 +73,10 @@ class CachedDeviceTypeMultipleChoiceField(CachedDeviceTypeChoiceHelper, forms.Mu
 class DeviceTypeControlMixin:
     def __init__(self, *args, **kwargs):
         request = kwargs.get('request')
+        super().__init__(*args, **kwargs)
         if request:
-            self.base_fields['device_type'] = CachedDeviceTypeChoiceField(
+            self.fields['device_type'] = CachedDeviceTypeChoiceField(
                 user=request.user.organization_user,
                 current_branch_ids=request.current_branch_ids,
                 required=False,
             )
-        super().__init__(*args, **kwargs)

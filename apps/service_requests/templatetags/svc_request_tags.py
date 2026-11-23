@@ -44,3 +44,8 @@ def get_status_badge(svc_request: ServiceRequest) -> str:
         {svc_request.get_status_display()}
         </span>
     ''')
+
+
+@register.filter
+def is_none(value):
+    return value is None

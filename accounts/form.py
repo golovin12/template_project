@@ -13,21 +13,21 @@ class BranchControlMixinBase:
     branch_field = 'branch'
 
     def _set_branch_field(self):
-        self.base_fields[self.branch_field] = CachedBranchChoiceField(request=self.request)
+        self.fields[self.branch_field] = CachedBranchChoiceField(request=self.request)
 
 
 class BranchControlMixin(BranchControlMixinBase):
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
-        self._set_branch_field()
         super().__init__(*args, **kwargs)
+        self._set_branch_field()
 
 
 class BranchControlFilterMixin(BranchControlMixinBase):
     def __init__(self, request: OrganizationRequest, *args, **kwargs):
         self.request = request
-        self._set_branch_field()
         super().__init__(request, *args, **kwargs)
+        self._set_branch_field()
 
 
 class CachedBranchChoiceField(CustomModelChoiceFieldInterface):
