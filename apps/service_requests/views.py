@@ -185,7 +185,7 @@ class ServiceRequestCompleteView(UserCityControlMixin, RoleRequiredMixin, Single
             form.save()
             messages.success(request, 'Заявка завершена')
             return HttpResponse(status=204)
-        return render(request, 'service_request/block/complete_request_body.html', {'closing_form': form})
+        return render(request, 'service_request/block/complete_request_body.html', {'form': form})
 
 
 class ServiceRequestDiagnosticView(UserCityControlMixin, RoleRequiredMixin, SingleObjectMixin, View):
@@ -202,7 +202,7 @@ class ServiceRequestDiagnosticView(UserCityControlMixin, RoleRequiredMixin, Sing
             form.save()
             messages.success(request, 'Заявка переведена в статус диагностики!')
             return HttpResponse(status=204)
-        return render(request, 'service_request/block/diagnostic_request_body.html', {'diagnostic_form': form})
+        return render(request, 'service_request/block/diagnostic_request_body.html', {'form': form})
 
 
 class ServiceRequestCancelView(UserCityControlMixin, RoleRequiredMixin, SingleObjectMixin, View):

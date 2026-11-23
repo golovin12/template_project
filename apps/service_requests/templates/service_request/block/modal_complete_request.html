@@ -10,7 +10,7 @@
                   enctype="multipart/form-data" id="completeRequest">
                 {% csrf_token %}
                 <div class="modal-body" id="completeRequestBody">
-                    {% include 'service_request/block/complete_request_body.html' with closing_form=closing_form %}
+                    {% include 'service_request/block/complete_request_body.html' with form=closing_form %}
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-success action-btn">
