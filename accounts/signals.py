@@ -2,17 +2,11 @@ from django.db.models import Q
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
 
-from apps.service_requests.models import Master
 from .models import City, Branch, OrganizationUser
 
 
 @receiver([post_save, post_delete], sender=Branch)
 def after_change_branch(sender, instance: Branch, **kwargs):
-    signal = kwargs.get('signal')
-
-    if signal != post_delete and not instance.is_active:
-        Master.branches.through.objects.filter(branch_id=instance.id).delete()
-
     users = OrganizationUser.objects.filter(
         Q(cities__branches=instance) | Q(all_cities_access=True) | Q(is_superuser=True)).distinct()
 
