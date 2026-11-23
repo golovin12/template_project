@@ -5,12 +5,10 @@ from django_select2.forms import Select2Widget, Select2MultipleWidget
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-from django.db import transaction
 
 from accounts.form import BranchControlMixin
 from accounts.models import Branch
-from common_tools.form import WithoutPlaceholderMixin, MultipleImageField, PhoneField
-from common_tools.validators import validate_file_field
+from common_tools.form import WithoutPlaceholderMixin, PhoneField
 from common_tools.widgets import DateWidget, DateTimeWidget
 from .controllers import RequestController
 from .form import DeviceTypeControlMixin
@@ -42,13 +40,7 @@ class ServiceRequestCreateForm(BranchControlMixin, DeviceTypeControlMixin, Witho
 
     def save(self, commit=True):
         instance: ServiceRequest = super().save(commit=False)
-        instance.created_by = self.request.user.organization_user
-        last_request = ServiceRequest.objects.order_by('-request_number').first()
-        instance.request_number = last_request.request_number + 1 if last_request else 100001
-
-        if commit:
-            instance.save()
-        return instance
+        return RequestController.create_request(instance, self.request.user.organization_user, commit)
 
 
 class ServiceRequestUpdateForm(BranchControlMixin, DeviceTypeControlMixin, WithoutPlaceholderMixin, forms.ModelForm):
@@ -138,8 +130,8 @@ class ServiceRequestCompleteForm(WithoutPlaceholderMixin, forms.ModelForm):
         return cd
 
     def save(self, commit=True):
-        self.instance.status = ServiceRequest.STATUS.COMPLETED
-        return super().save(commit=commit)
+        instance = super().save(commit=False)
+        return RequestController.complete_request(instance, commit)
 
 
 class ServiceRequestDiagnosticForm(WithoutPlaceholderMixin, forms.ModelForm):
@@ -152,8 +144,8 @@ class ServiceRequestDiagnosticForm(WithoutPlaceholderMixin, forms.ModelForm):
         }
 
     def save(self, commit=True):
-        self.instance.status = ServiceRequest.STATUS.SERVICE_DIAGNOSTICS
-        return super().save(commit=commit)
+        instance = super().save(commit=False)
+        return RequestController.start_diagnostics(instance, commit)
 
 
 class DeviceTypeCreateForm(WithoutPlaceholderMixin, forms.ModelForm):

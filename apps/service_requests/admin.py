@@ -117,8 +117,6 @@ class ServiceRequestAdmin(ManagerAdmin):
             obj = self.get_object(request, object_id)
             try:
                 obj.status = ServiceRequest.STATUS.IN_PROGRESS
-                if hasattr(obj, 'masterincome'):
-                    obj.masterincome.delete()
                 obj.closing_time = None
                 obj.closing_amount = None
                 bookkeeping_models.AccountingEntry.objects.filter(service_request=obj).delete()

@@ -19,7 +19,7 @@ from accounts.mixins import (
 )
 from accounts.models import OrganizationUser
 from common_tools.view import FilterSingleTableView, PassRequestToFormMixin, QuerySetMixin
-from . import models, forms, filter_forms, tables
+from . import models, forms, filter_forms, tables, controllers
 
 
 class CreatedServiceRequestsView(ChiefRequiredMixin, FilterSingleTableView):
@@ -56,7 +56,7 @@ class ServiceRequestMainView(UserCityControlMixin, BranchControlHelperMixin, Rol
 class ServiceRequestListView(UserCityControlMixin, RoleRequiredMixin, FilterSingleTableView):
     """Список созданных заявок"""
     roles_required = (USER_ROLES.CITY_ADMIN, USER_ROLES.CHIEF)
-    queryset = models.ServiceRequest.objects.select_related('branch', 'assigned_master')
+    queryset = models.ServiceRequest.objects.select_related('branch')
     table_class = tables.ServiceRequestTable
     filter_form_class = filter_forms.ServiceRequestFilterForm
     template_name = 'service_request/request_list.html'
@@ -148,7 +148,7 @@ class ServiceRequestDetailView(UserCityControlMixin, RoleRequiredMixin, DetailVi
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
-        if self.object.assigned_master and not self.object.is_status_end:
+        if not self.object.is_status_end:
             context['closing_form'] = forms.ServiceRequestCompleteForm(instance=self.object)
             if self.object.is_status_progress:
                 context['diagnostic_form'] = forms.ServiceRequestDiagnosticForm(instance=self.object)
@@ -167,12 +167,7 @@ class ServiceRequestUpdateMasterStatusView(UserCityControlMixin, RoleRequiredMix
         self.request = request
         self.kwargs = kwargs
         service_request = self.get_object()
-        statuses = models.ServiceRequest.STATUS
-        new_status = request.POST.get('new_status')
-        if (new_status in (statuses.ON_WAY, statuses.IN_PROGRESS)
-                and service_request.status in (statuses.ASSIGNED, statuses.ON_WAY)):
-            service_request.status = new_status
-            service_request.save(update_fields=['status'])
+        controllers.RequestController.update_master_status(service_request, request.POST.get('new_status'))
         return redirect('service_request:request_detail', **kwargs)
 
 
@@ -186,7 +181,7 @@ class ServiceRequestCompleteView(UserCityControlMixin, RoleRequiredMixin, Single
         self.kwargs = kwargs
         service_request = self.get_object()
         form = forms.ServiceRequestCompleteForm(request.POST, instance=service_request, files=request.FILES)
-        if not service_request.is_status_end and service_request.assigned_master and form.is_valid():
+        if not service_request.is_status_end and form.is_valid():
             form.save()
             messages.success(request, 'Заявка завершена')
             return HttpResponse(status=204)
@@ -203,7 +198,7 @@ class ServiceRequestDiagnosticView(UserCityControlMixin, RoleRequiredMixin, Sing
         self.kwargs = kwargs
         service_request = self.get_object()
         form = forms.ServiceRequestDiagnosticForm(request.POST, instance=service_request, files=request.FILES)
-        if not service_request.is_status_end and service_request.assigned_master and form.is_valid():
+        if not service_request.is_status_end and form.is_valid():
             form.save()
             messages.success(request, 'Заявка переведена в статус диагностики!')
             return HttpResponse(status=204)
@@ -219,9 +214,7 @@ class ServiceRequestCancelView(UserCityControlMixin, RoleRequiredMixin, SingleOb
         self.request = request
         self.kwargs = kwargs
         service_request = self.get_object()
-        if not service_request.is_status_end:
-            service_request.status = models.ServiceRequest.STATUS.CANCELED
-            service_request.save(update_fields=['status'])
+        if controllers.RequestController.cancel_request(service_request):
             messages.success(request, 'Заявка отменена')
         return redirect('service_request:request_detail', **kwargs)
 
