@@ -73,7 +73,6 @@ INSTALLED_APPS = [
     'promoter_app',
     'apps.bookkeeping',
     'apps.notifications',
-    'apps.promoters',
     'apps.service_requests',
     'apps.statistics',
 ]
@@ -138,9 +137,9 @@ DATABASES = {
             }
         }
     },
-    'zone_1': {
+    'organization_1': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'zone_1',
+        'NAME': 'organization_1',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': '127.0.0.1',
@@ -153,9 +152,9 @@ DATABASES = {
             }
         }
     },
-    'zone_2': {
+    'organization_2': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'zone_2',
+        'NAME': 'organization_2',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': '127.0.0.1',
@@ -186,7 +185,7 @@ DATABASES = {
 }
 
 DATABASE_ROUTERS = [
-    'int.db_router.ZoneRouter',
+    'int.db_router.OrganizationRouter',
 ]
 
 # Password validation

@@ -5,8 +5,8 @@ from faker import Faker
 
 from django.core.management.base import BaseCommand
 
-from apps.service_requests.models import ServiceRequest, Branch, Master
-from accounts.models import User
+from apps.service_requests.models import ServiceRequest, Branch
+from accounts.models import OrganizationUser
 
 fake = Faker("ru_RU")
 
@@ -26,15 +26,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("Нет филиалов (Branch) в базе!"))
             return
 
-        users = list(User.objects.all())
+        users = list(OrganizationUser.objects.all())
         if not users:
             self.stdout.write(self.style.ERROR("Нет пользователей (User) в базе!"))
             return
-
-        masters_by_branch = {
-            branch.id: list(Master.objects.filter(branch=branch))
-            for branch in branches
-        }
 
         start_number = 200001
 
@@ -50,12 +45,6 @@ class Command(BaseCommand):
             status = random.choice([s[0] for s in ServiceRequest.STATUS.choices])
             created_by = random.choice(users)
 
-            if status == ServiceRequest.STATUS.NEW:
-                assigned_master = None
-            else:
-                masters = masters_by_branch.get(branch.id, [])
-                assigned_master = random.choice(masters) if masters else None
-
             closing_time = None
             closing_amount = None
             if status == ServiceRequest.STATUS.COMPLETED:
@@ -70,7 +59,6 @@ class Command(BaseCommand):
                 created_by=created_by,
                 status=status,
                 branch=branch,
-                assigned_master=assigned_master,
                 client_name=fake.first_name(),
                 client_address=fake.address(),
                 client_apartment=str(random.randint(1, 300)),

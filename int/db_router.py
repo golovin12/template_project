@@ -1,7 +1,7 @@
 from int.db_context import DatabaseContext
 
 
-class ZoneRouter:
+class OrganizationRouter:
     AUTH_APPS = {
         'identity',
 
@@ -14,8 +14,7 @@ class ZoneRouter:
 
         'django_dramatiq',
     }
-    DEFAULT_MODELS = {'notifications.notificationconnectcode', 'notifications.notificationmessage',
-                      'promoter_app.promoterzone'}
+    DEFAULT_MODELS = {'notifications.notificationconnectcode', 'notifications.notificationmessage'}
 
     def db_for_read(self, model, **hints):
         app = model._meta.app_label

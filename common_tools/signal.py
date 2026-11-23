@@ -2,13 +2,9 @@ from int.management.storage_backends import MediaStorage
 
 
 def add_field_name_kwargs(field_name):
-    """Внешняя функция принимает параметры декоратора"""
-
     def decorator(func):
-        """Собственно декоратор"""
 
         def wrapper(*args, **kwargs):
-            """Обёртка вокруг декорируемой функции"""
             result = func(*args, field_name=field_name, **kwargs)
             return result
 

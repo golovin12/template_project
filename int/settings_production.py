@@ -36,9 +36,9 @@ DATABASES = {
             }
         }
     },
-    'zone_1': {
+    'organization_1': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'zone_1',
+        'NAME': 'organization_1',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -51,9 +51,9 @@ DATABASES = {
             }
         }
     },
-    'zone_2': {
+    'organization_2': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'zone_2',
+        'NAME': 'organization_2',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -66,9 +66,9 @@ DATABASES = {
             }
         }
     },
-    'zone_3': {
+    'organization_3': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'zone_3',
+        'NAME': 'organization_3',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',

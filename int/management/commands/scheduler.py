@@ -30,8 +30,7 @@ class Command(BaseCommand):
         scheduler_config.add_tasks(scheduler)
 
         for job in scheduler.get_jobs():
-            if not (job.name.endswith('.send') or job.name.endswith('.send_with_options') or job.name.endswith(
-                    '.send_with_zone')):
+            if not (job.name.endswith('.send') or job.name.endswith('.send_with_options')):
                 raise ValueError('Задачи следует вызывать асинхронным методом .send или .send_with_options')
 
         scheduler.start()
