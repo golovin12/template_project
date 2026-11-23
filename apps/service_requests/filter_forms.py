@@ -140,10 +140,3 @@ class ServiceRequestFilterForm(BranchControlFilterMixin, DeviceTypeControlMixin,
         if cd.get('sd_closing_today'):
             qs = qs.filter(sd_closing_date=timezone.now().date())
         return qs
-
-
-class PaginationFilterForm(BaseFilterForm, forms.Form):
-    """Форма фильтрации для пагинации"""
-
-    def _filtration(self, qs):
-        return qs

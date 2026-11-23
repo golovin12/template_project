@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 from django.utils.html import format_html
 
 from accounts.base import ManagerAdmin, OrganizationRequest
-from apps.bookkeeping import models as bookkeeping_models
+from .controllers import RequestController
 from .models import ServiceRequest, DeviceType
 
 
@@ -116,11 +116,7 @@ class ServiceRequestAdmin(ManagerAdmin):
         if request.method == 'POST' and 'closing_undo_action' in request.POST:
             obj = self.get_object(request, object_id)
             try:
-                obj.status = ServiceRequest.STATUS.IN_PROGRESS
-                obj.closing_time = None
-                obj.closing_amount = None
-                bookkeeping_models.AccountingEntry.objects.filter(service_request=obj).delete()
-                obj.save()
+                RequestController.undo_closing(obj)
                 self.message_user(request, 'Заявка переведена в статус "В работе"')
                 return redirect(request.path)
             except Exception as e:

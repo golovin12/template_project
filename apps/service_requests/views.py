@@ -181,7 +181,7 @@ class ServiceRequestCompleteView(UserCityControlMixin, RoleRequiredMixin, Single
         self.kwargs = kwargs
         service_request = self.get_object()
         form = forms.ServiceRequestCompleteForm(request.POST, instance=service_request, files=request.FILES)
-        if not service_request.is_status_end and form.is_valid():
+        if form.is_valid():
             form.save()
             messages.success(request, 'Заявка завершена')
             return HttpResponse(status=204)
@@ -198,7 +198,7 @@ class ServiceRequestDiagnosticView(UserCityControlMixin, RoleRequiredMixin, Sing
         self.kwargs = kwargs
         service_request = self.get_object()
         form = forms.ServiceRequestDiagnosticForm(request.POST, instance=service_request, files=request.FILES)
-        if not service_request.is_status_end and form.is_valid():
+        if form.is_valid():
             form.save()
             messages.success(request, 'Заявка переведена в статус диагностики!')
             return HttpResponse(status=204)

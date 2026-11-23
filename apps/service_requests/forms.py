@@ -122,6 +122,9 @@ class ServiceRequestCompleteForm(WithoutPlaceholderMixin, forms.ModelForm):
             self.initial['service_report'] = 'Диагностика выполнена.'
 
     def clean(self):
+        if self.instance.is_status_end:
+            raise ValidationError('Нельзя завершить уже закрытую заявку.')
+
         cd = self.cleaned_data
         closing_amount = cd.get('closing_amount') or Decimal(0)
         other_expenses = cd.get('other_expenses') or Decimal(0)
@@ -142,6 +145,14 @@ class ServiceRequestDiagnosticForm(WithoutPlaceholderMixin, forms.ModelForm):
             'service_report': forms.Textarea(attrs={'rows': 3}),
             'sd_closing_date': DateWidget(),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if self.instance.is_status_end:
+            raise ValidationError('Нельзя перевести в диагностику уже закрытую заявку.')
+
+        return cleaned_data
 
     def save(self, commit=True):
         instance = super().save(commit=False)

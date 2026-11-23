@@ -1,4 +1,5 @@
 from accounts.models import OrganizationUser
+from apps.bookkeeping.models import AccountingEntry
 from .models import ServiceRequest
 
 
@@ -59,3 +60,13 @@ class RequestController:
         instance.status = ServiceRequest.STATUS.CANCELED
         instance.save(update_fields=['status'])
         return True
+
+    @staticmethod
+    def undo_closing(instance: ServiceRequest) -> ServiceRequest:
+        """Отмена закрытия заявки, с удалением записи в бухгалтерии"""
+        instance.status = ServiceRequest.STATUS.IN_PROGRESS
+        instance.closing_time = None
+        instance.closing_amount = None
+        AccountingEntry.objects.filter(service_request=instance).delete()
+        instance.save()
+        return instance
