@@ -17,10 +17,6 @@ class BaseAccountsViewTestCase(BaseTestCase):
         )
         self.client.force_login(self.manager)
 
-        session = self.client.session
-        session['current_db_alias'] = 'organization_1'
-        session.save()
-
     def get_messages(self, response):
         return [message.message for message in get_messages(response.wsgi_request)]
 
