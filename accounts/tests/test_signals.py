@@ -1,5 +1,4 @@
 from django.core.cache import cache
-from django.test import TestCase
 
 from accounts.base import create_user_with_role
 from accounts.consts import USER_ROLES
