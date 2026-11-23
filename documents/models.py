@@ -55,8 +55,8 @@ class DocumentFolder(models.Model):
         ordering = ('name',)
         constraints = [
             models.UniqueConstraint(
+                'user',
                 Lower('name'),
-                fields=('user',),
                 name='documents_folder_user_name_unique',
             ),
         ]
