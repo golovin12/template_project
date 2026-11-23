@@ -11,11 +11,7 @@ from accounts.models import Branch, City
 from common_tools.test import BaseTestCase
 from apps.service_requests.models import ServiceRequest
 from int.db_context import DatabaseContext
-from .services import (
-    CityStatisticsCacheService,
-    CityStatisticsDataProvider,
-    CityStatisticsService,
-)
+from .services import CityStatisticsCacheService, CityStatisticsDataProvider, CityStatisticsService
 from .services.cache_keys import city_stats_cache_key
 
 
