@@ -138,15 +138,15 @@
 {% block welcome-msg %}{% endblock %}
 
 {% block userlinks %}
-    {% if request.available_zones|length > 1 %}
-        <form id="zone-form" method="post" action="{% url 'identity:select_zone' %}"
+    {% if request.available_organizations|length > 1 %}
+        <form id="organization-form" method="post" action="{% url 'identity:select_organization' %}"
               style="display:inline-block; margin-right:10px;">
             {% csrf_token %}
-            <select id="zone-select" name="zone" style="min-width:180px;">
-                {% for zone_alias, zone_name in request.available_zones %}
-                    <option value="{{ zone_alias }}"
-                            {% if zone_alias == request.session.zone_db %}selected{% endif %}>
-                        {{ zone_name }}
+            <select id="organization-select" name="organization_alias" style="min-width:180px;">
+                {% for db_alias, organization_name in request.available_organizations %}
+                    <option value="{{ db_alias }}"
+                            {% if db_alias == request.session.current_db_alias %}selected{% endif %}>
+                        {{ organization_name }}
                     </option>
                 {% endfor %}
             </select>
@@ -161,19 +161,19 @@
 
     <script>
         $(function () {
-            const zoneSelector = $('#zone-select');
+            const organizationSelector = $('#organization-select');
 
-            if (!zoneSelector.length) {
+            if (!organizationSelector.length) {
                 return;
             }
 
-            zoneSelector.select2({
+            organizationSelector.select2({
                 width: '180px',
                 minimumResultsForSearch: 1
             });
 
-            zoneSelector.on('change', function () {
-                const form = $('#zone-form');
+            organizationSelector.on('change', function () {
+                const form = $('#organization-form');
 
                 $.ajax({
                     url: form.attr('action'),
@@ -183,7 +183,7 @@
                         location.reload();
                     },
                     error: function () {
-                        alert('Не удалось изменить зону.');
+                        alert('Не удалось изменить организацию.');
                     }
                 });
             });

@@ -8,7 +8,7 @@ from apps.notifications.enums import NotificationProvider
 from identity.models import AuthUser, Organization
 from accounts.models import OrganizationUser
 from int.db_context import DatabaseContext
-from int.db_router import ZoneRouter
+from int.db_router import OrganizationRouter
 
 
 class Command(BaseCommand):
@@ -108,7 +108,7 @@ class Command(BaseCommand):
 
         # Используем Legacy модели для чтения из старой БД
         for old in LegacyPromoterProfile.objects.using("old").all():
-            # Копируем PromoterProfile в zone_1
+            # Копируем PromoterProfile в organization_1
             PromoterProfile = apps.get_model("promoter_app", "PromoterProfile")
 
             if not PromoterProfile.objects.using("zone_1").filter(pk=old.pk).exists():
@@ -179,7 +179,7 @@ class Command(BaseCommand):
             if model_name == 'Task':
                 continue
 
-            if app in ZoneRouter.AUTH_APPS or f'{app}.{model_name}'.lower() in ZoneRouter.DEFAULT_MODELS:
+            if app in OrganizationRouter.AUTH_APPS or f'{app}.{model_name}'.lower() in OrganizationRouter.DEFAULT_MODELS:
                 target_db = "default"
             else:
                 target_db = "zone_1"
@@ -209,7 +209,7 @@ class Command(BaseCommand):
             if model_name == 'Task':
                 continue
 
-            if app in ZoneRouter.AUTH_APPS or f'{app}.{model_name}'.lower() in ZoneRouter.DEFAULT_MODELS:
+            if app in ZoneRouter.AUTH_APPS or f'{app}.{model_name}'.lower() in OrganizationRouter.DEFAULT_MODELS:
                 target_db = "default"
             else:
                 target_db = "zone_1"

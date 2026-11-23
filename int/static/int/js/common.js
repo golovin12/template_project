@@ -183,14 +183,14 @@ $(function () {
 });
 
 $(function () {
-    let zoneSelector = $('#zone-select');
+    let organizationSelector = $('#organization-select');
 
-    zoneSelector.select2({
-        width: '100%', placeholder: 'Выберите зону', minimumResultsForSearch: 1
+    organizationSelector.select2({
+        width: '100%', placeholder: 'Выберите организацию', minimumResultsForSearch: 1
     }).data('select2')?.$container.attr("style", "min-width: 7.5em; max-width: 50em;");
 
-    zoneSelector.on('change', function () {
-        const form = $('#zone-form');
+    organizationSelector.on('change', function () {
+        const form = $('#organization-form');
 
         $.ajax({
             url: form.attr('action') || window.location.href,
@@ -200,8 +200,8 @@ $(function () {
                 location.reload();
             },
             error: function (xhr) {
-                console.error('Ошибка при выборе зоны:', xhr.responseText);
-                showNotification('Не удалось изменить зону.', "error");
+                console.error('Ошибка при выборе организации:', xhr.responseText);
+                showNotification('Не удалось сменить организацию.', 'error');
             }
         });
     });

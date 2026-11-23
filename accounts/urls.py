@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     UserListView, UserCreateView, UserUpdateView, ChangePasswordView, HomePageView, SelectCityView, BranchListView,
     BranchCreateView, BranchUpdateView, CityListView, CityCreateView, CityUpdateView, UserAssociateView,
-    UserDeleteView
+    UserDeleteView, UserAutocompleteView
 )
 
 app_name = 'accounts'
@@ -12,6 +12,7 @@ urlpatterns = [
     path('', UserListView.as_view(), name='list'),
     path('create/', UserCreateView.as_view(), name='create'),
     path('delete/<int:pk>/', UserDeleteView.as_view(), name='delete'),
+    path('api/users/', UserAutocompleteView.as_view(), name='user_autocomplete'),
     path('associate/', UserAssociateView.as_view(), name='associate'),
     path('<int:pk>/edit/', UserUpdateView.as_view(), name='edit'),
     path('<int:pk>/change_password/', ChangePasswordView.as_view(), name='change_password'),

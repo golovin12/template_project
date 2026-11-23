@@ -26,8 +26,8 @@ def using_database(db_alias):
     Контекстный менеджер для временного переключения БД.
 
     Использование:
-        with using_database('zone_1'):
-            # Все запросы здесь будут использовать zone_1
+        with using_database('organization_1'):
+            # Все запросы здесь будут использовать organization_1
             user = User.objects.get(id=1)
     """
     token = current_database.set(db_alias)

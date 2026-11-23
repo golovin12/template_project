@@ -78,6 +78,23 @@ class UserDeleteView(ManagerRequiredMixin, View):
         return redirect('accounts:list')
 
 
+class UserAutocompleteView(ManagerRequiredMixin, View):
+    """API для автокомплита пользователей"""
+
+    def get(self, request: OrganizationRequest):
+        existing_user_ids = list(OrganizationUser.objects.values_list('user_id', flat=True))
+        users = AuthUser.objects.exclude(id__in=existing_user_ids).order_by('username')
+
+        return JsonResponse({
+            'results': [
+                {
+                    'id': user.id,
+                    'text': f'{user.username} — {user.get_full_name()}',
+                } for user in users
+            ]
+        })
+
+
 class UserAssociateView(ManagerRequiredMixin, CreateView):
     """Создание пользователя для существующего акка"""
     model = OrganizationUser

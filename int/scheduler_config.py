@@ -14,10 +14,10 @@ INTERVAL = 'interval'
 CRON = 'cron'
 
 
-def bind_db_alias(actor_send, zone):
+def bind_db_alias(actor_send, organization):
     @wraps(actor_send)
     def wrapper(*args, **kwargs):
-        return actor_send(zone, *args, **kwargs)
+        return actor_send(organization, *args, **kwargs)
 
     return wrapper
 
@@ -64,7 +64,7 @@ def add_tasks(scheduler):
     Run the `job_function` every hour with an extra-delay picked randomly in a [-120,+120] seconds window.
         sched.add_job(job_function, 'interval', hours=1, jitter=120)
     """
-    # default_zones
+    # default db alias
     # django_dramatiq
     scheduler.add_job(django_dramatiq_tasks.delete_old_tasks.send, CRON, hour='23', minute='0')
     # notifications_queue
@@ -73,7 +73,7 @@ def add_tasks(scheduler):
     # notifications
     scheduler.add_job(bind_db_alias(notification_tasks.cleanup_old_telegram_messages.send_with_db_alias, 'default'),
                       CRON, hour='3', minute='0')
-    # Other zones
+    # organisations db
     all_databases = list(settings.DATABASES.keys())
     db_aliases = [alias for alias in all_databases if alias != 'old']
     for alias in db_aliases:

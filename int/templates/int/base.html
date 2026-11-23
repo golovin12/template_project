@@ -65,33 +65,20 @@
                 <ul class="navbar-nav mr-auto">
                     <!-- Ссылки на страницы -->
                     {% if request.user.is_authenticated %}
-                        {% if is_manager or is_city_admin or is_dispatcher or is_chief %}
+                        {% if is_manager or is_city_admin or is_chief %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'service_request:request_main' %}">Система заявок</a>
                             </li>
                         {% endif %}
-                        {% if is_manager or is_chief or is_accountant %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'bookkeeping:dashboard' %}">Бухгалтерия</a>
-                            </li>
-                        {% endif %}
                         {% if is_manager or is_chief %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'service_request:masters' %}">Мастера</a>
-                            </li>
-                        {% endif %}
-                        {% if is_manager or is_chief or is_city_admin %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'promoters:activities_list' %}">Промоутеры</a>
+                                <a class="nav-link" href="{% url 'bookkeeping:dashboard' %}">Бухгалтерия</a>
                             </li>
                         {% endif %}
                         {% if is_city_admin %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'bookkeeping:entry_create' %}">Добавить расходы</a>
                             </li>
-                        {% endif %}
-                        {% if is_master %}
-                            {% block master_info %}{% endblock %}
                         {% endif %}
                         {% if is_manager %}
                             <li class="nav-item">
@@ -114,14 +101,6 @@
                                     <li>
                                         <a class="nav-link" href="{% url 'accounts:city_list' %}">Города</a>
                                     </li>
-                                    <li>
-                                        <a class="nav-link" href="{% url 'bookkeeping:zone_list' %}">Зоны Инкас.</a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link" href="{% url 'service_request:act_company_settings' %}">
-                                            Данные Акта
-                                        </a>
-                                    </li>
                                 </ul>
                             </li>
                         {% endif %}
@@ -130,16 +109,16 @@
                 <!-- Кнопки пользователя -->
                 <ul class="navbar-nav ml-auto my-2 my-md-0">
                     {% if request.user.is_authenticated %}
-                        {% if request.available_zones|length > 1 %}
+                        {% if request.available_organizations|length > 1 %}
                             <li class="nav-item">
-                                <form id="zone-form" method="post" action="{% url 'identity:select_zone' %}"
+                                <form id="organization-form" method="post" action="{% url 'identity:select_organization' %}"
                                       class="w-100">
                                     {% csrf_token %}
-                                    <select id="zone-select" name="zone" class="form-select">
-                                        {% for zone_alias, zone_name in request.available_zones %}
-                                            <option value="{{ zone_alias }}"
-                                                    {% if zone_alias == request.session.zone_db %}selected{% endif %}>
-                                                {{ zone_name }}
+                                    <select id="organization-select" name="organization_alias" class="form-select">
+                                        {% for db_alias, organization_name in request.available_organizations %}
+                                            <option value="{{ db_alias }}"
+                                                    {% if db_alias == request.session.current_db_alias %}selected{% endif %}>
+                                                {{ organization_name }}
                                             </option>
                                         {% endfor %}
                                     </select>
@@ -152,12 +131,7 @@
                                 {{ request.user.username }}
                             </a>
                             <ul class="dropdown-menu p-0">
-                                <li>
-                                    <a href="{% url 'bookkeeping:my_salary_list' %}" class="nav-link">
-                                        Моя зарплата
-                                    </a>
-                                </li>
-                                {% if is_manager or is_chief or is_city_admin or is_master %}
+                                {% if is_manager or is_chief or is_city_admin %}
                                     <li>
                                         <a href="{% url 'notifications:settings' %}" class="nav-link">
                                             Уведомления
