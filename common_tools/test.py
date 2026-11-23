@@ -7,7 +7,7 @@ from int.db_context import DatabaseContext
 
 
 class BaseTestCase(TestCase):
-    databases = {"default", "zone_1"}
+    databases = {"default", "organization_1"}
 
     def setUp(self):
         super().setUp()
@@ -15,7 +15,7 @@ class BaseTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._db_context = DatabaseContext.using("zone_1")
+        cls._db_context = DatabaseContext.using("organization_1")
         cls._db_context.__enter__()
         super().setUpClass()
         cls._set_patcher = patch(
