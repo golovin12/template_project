@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 from common_tools.async_files import storage_client, storage_file_iterator
 from common_tools.images import acompress_image
 from .auth import documents_login_required
-from .controllers import delete_file
+from .controllers import delete_file, save_folder
 from .forms import (
     DocumentsLoginForm, DocumentsRegistrationForm, DocumentFolderForm, DocumentSelectionForm, DocumentUploadForm
 )
@@ -149,7 +149,7 @@ async def folder_create(request: DocumentsHttpRequest):
         folder = form.save(commit=False)
 
         try:
-            await folder.asave()
+            await save_folder(folder)
         except IntegrityError:
             form.add_error('name', 'Папка с таким названием уже существует.')
         else:

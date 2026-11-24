@@ -2,10 +2,21 @@ from asgiref.sync import sync_to_async
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 from common_tools.images import acompress_image
 from .models import DocumentFile, DocumentFolder, DocumentsUser
+
+
+def _save_folder(folder: DocumentFolder) -> DocumentFolder:
+    with transaction.atomic():
+        folder.save()
+
+    return folder
+
+
+async def save_folder(folder: DocumentFolder) -> DocumentFolder:
+    return await sync_to_async(_save_folder)(folder)
 
 
 async def create_folder(user: DocumentsUser, name: str) -> DocumentFolder:
@@ -14,8 +25,10 @@ async def create_folder(user: DocumentsUser, name: str) -> DocumentFolder:
     if not name:
         raise ValidationError('Название папки не может быть пустым.')
 
+    folder = DocumentFolder(user=user, name=name)
+
     try:
-        return await DocumentFolder.objects.acreate(user=user, name=name)
+        return await save_folder(folder)
     except IntegrityError:
         raise ValidationError('Папка с таким названием уже существует.')
 
