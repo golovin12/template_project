@@ -93,8 +93,8 @@ services:
     command: >
       bash -c "python manage.py create_databases
       && python manage.py migrate --database=default
-      && python manage.py migrate --database=zone_1
-      && python manage.py migrate --database=zone_2
+      && python manage.py migrate --database=organization_1
+      && python manage.py migrate --database=organization_2
       && echo yes | python manage.py collectstatic
       && uvicorn int.asgi_stage:application --host 0.0.0.0 --port 8000 --workers 2"
     environment:
