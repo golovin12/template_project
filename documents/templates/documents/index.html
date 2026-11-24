@@ -42,9 +42,7 @@
                             {{ folder.name }}
                         </a>
                     {% empty %}
-                        <div class="list-group-item text-muted">
-                            Папок пока нет
-                        </div>
+                        <div class="list-group-item text-muted">Папок пока нет</div>
                     {% endfor %}
                 </div>
             </div>
@@ -56,9 +54,7 @@
                         {% csrf_token %}
 
                         {% if folder_form.non_field_errors %}
-                            <div class="text-danger mb-2">
-                                {{ folder_form.non_field_errors }}
-                            </div>
+                            <div class="text-danger mb-2">{{ folder_form.non_field_errors }}</div>
                         {% endif %}
 
                         {% for field in folder_form %}
@@ -71,9 +67,7 @@
                             </div>
                         {% endfor %}
 
-                        <button type="submit" class="btn btn-primary btn-block">
-                            Создать
-                        </button>
+                        <button type="submit" class="btn btn-primary btn-block">Создать</button>
                     </form>
                 </div>
             </div>
@@ -94,9 +88,7 @@
                         {% csrf_token %}
 
                         {% if upload_form.non_field_errors %}
-                            <div class="alert alert-danger">
-                                {{ upload_form.non_field_errors }}
-                            </div>
+                            <div class="alert alert-danger">{{ upload_form.non_field_errors }}</div>
                         {% endif %}
 
                         <div class="form-row align-items-end">
@@ -121,22 +113,14 @@
                             </div>
 
                             <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary btn-block mb-3">
-                                    Загрузить
-                                </button>
+                                <button type="submit" class="btn btn-primary btn-block mb-3">Загрузить</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <form id="zip-form"
-                  method="post"
-                  action="
-
-
-
-                          {% url 'documents:files_download' %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
+            <form id="zip-form" method="post" action="{% url 'documents:files_download' %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-primary btn-sm mb-2">
                     Скачать выбранные ZIP
@@ -168,8 +152,7 @@
                             <td>{{ document.created_at|date:"d.m.Y H:i" }}</td>
                             <td>{{ document.size|filesizeformat }}</td>
                             <td class="text-right">
-                                <form method="post"
-                                      action="{% url 'documents:file_delete' document.pk %}">
+                                <form method="post" action="{% url 'documents:file_delete' document.pk %}">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-outline-danger btn-sm"
                                             onclick="return confirm('Удалить файл?')">
