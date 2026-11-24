@@ -19,6 +19,9 @@ class DocumentsUserMiddleware:
         markcoroutinefunction(self)
 
     async def __call__(self, request: DocumentsHttpRequest) -> HttpResponse:
+        if not request.path_info.startswith('/documents/'):
+            return await self.get_response(request)
+
         user_id = await request.session.aget(self.session_key)
 
         request.documents_user = (
