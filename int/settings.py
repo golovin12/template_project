@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 ENV = 'DEV'
 IS_WEB = True if os.getenv('IS_WEB', 'false').lower() == 'true' else False
-SERVER_DOMAIN = '192.168.0.120'
+SERVER_DOMAIN = '192.168.0.101'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 HOME_DIR = (BASE_DIR / '../').absolute()

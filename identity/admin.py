@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 
 from accounts.base import OrganizationRequest
 from .models import AuthUser, Organization
@@ -27,7 +27,7 @@ class AuthUserAdmin(UserAdmin):
         }),
         ('Персональная информация', {
             'fields': (
-                'last_name', 'first_name', 'second_name'
+                'last_name', 'first_name', 'second_name', 'email'
             ),
         }),
         ('Права доступа', {
@@ -46,16 +46,15 @@ class AuthUserAdmin(UserAdmin):
         (None, {
             'classes': ('wide',),
             'fields': (
-                'username', 'password1', 'password2', 'last_name', 'first_name', 'second_name', 'is_superuser'
+                'username', 'password1', 'password2', 'last_name', 'first_name', 'second_name', 'email', 'is_superuser'
             ),
         }),
     )
 
     @admin.display(description='Вход')
     def authorize(self, obj):
-        return format_html(
-            '<a href="{}?username={}">[войти как {}]</a>', reverse("identity:authorize"), obj.username, obj.username,
-        )
+        url = reverse('identity:authorize')
+        return format_html('<a href="{}?username={}">[войти как {}]</a>', url, obj.username, obj.username)
 
     @admin.display(description='Организации')
     def organizations_list(self, obj):
@@ -67,7 +66,7 @@ class AuthUserAdmin(UserAdmin):
         if not organizations.exists():
             return 'Не назначены'
 
-        return format_html('<br>'.join(f'• {organization.name}' for organization in organizations))
+        return format_html_join('', '<div>• {}</div>', ((organization.name,) for organization in organizations))
 
     def has_module_permission(self, request: OrganizationRequest):
         return request.user.is_superuser
@@ -88,10 +87,9 @@ class AuthUserAdmin(UserAdmin):
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ('name', 'database_alias', 'users_count')
-    search_fields = ('name', 'database_alias')
-    filter_horizontal = ('users',)
-    readonly_fields = ('database_alias',)
+    search_fields = ('name', 'database_alias', 'users__username')
     autocomplete_fields = ('users',)
+    readonly_fields = ('database_alias',)
 
     @admin.display(description='Пользователей')
     def users_count(self, obj):
