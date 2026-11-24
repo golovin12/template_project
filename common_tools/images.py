@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from asgiref.sync import sync_to_async
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile, UploadedFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 MAX_IMAGE_SIZE = 300 * 1024
@@ -9,7 +9,7 @@ MIN_IMAGE_SIZE = 400 * 1024
 SUPPORTED_FORMATS = {'JPEG', 'PNG', 'WEBP'}
 
 
-def compress_image(uploaded_file, max_size=MAX_IMAGE_SIZE):
+def compress_image(uploaded_file: UploadedFile, max_size: int = MAX_IMAGE_SIZE) -> UploadedFile:
     if uploaded_file.size < max_size + 100 * 1024:
         return uploaded_file
 

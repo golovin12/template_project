@@ -37,7 +37,7 @@ def parse_dates_from_string(input_string: str) -> tuple[str | None, str | None]:
     return date1, date2
 
 
-def get_last_day_prev_month():
+def get_last_day_prev_month() -> date:
     """Последний день прошедшего месяца"""
     today = datetime.now().date()
     first_day_current_month = today.replace(day=1)
@@ -45,6 +45,6 @@ def get_last_day_prev_month():
     return last_day_previous_month
 
 
-def get_first_day_prev_month():
+def get_first_day_prev_month() -> date:
     """Первый день прошедшего месяца"""
     return get_last_day_prev_month().replace(day=1)

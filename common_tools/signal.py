@@ -1,7 +1,7 @@
 from int.management.storage_backends import MediaStorage
 
 
-def add_field_name_kwargs(field_name):
+def add_field_name_kwargs(field_name: str) -> callable:
     def decorator(func):
 
         def wrapper(*args, **kwargs):

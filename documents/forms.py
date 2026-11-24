@@ -7,22 +7,14 @@ from .models import DocumentsUser, DocumentFile, DocumentFolder
 
 class DocumentsRegistrationForm(forms.Form):
     username = forms.CharField(max_length=150, label='Логин')
-    password = forms.CharField(
-        label='Пароль',
-        widget=forms.PasswordInput,
-    )
-    password_confirm = forms.CharField(
-        label='Повторите пароль',
-        widget=forms.PasswordInput,
-    )
+    password = forms.CharField(label='Пароль', widget=forms.PasswordInput)
+    password_confirm = forms.CharField(label='Повторите пароль', widget=forms.PasswordInput)
 
     def clean_username(self):
         username = self.cleaned_data['username'].strip()
 
         if DocumentsUser.objects.filter(username__iexact=username).exists():
-            raise ValidationError(
-                'Пользователь с таким логином уже существует.'
-            )
+            raise ValidationError('Пользователь с таким логином уже существует.')
 
         return username
 
@@ -51,10 +43,7 @@ class DocumentsRegistrationForm(forms.Form):
 
 class DocumentsLoginForm(forms.Form):
     username = forms.CharField(max_length=150, label='Логин')
-    password = forms.CharField(
-        label='Пароль',
-        widget=forms.PasswordInput,
-    )
+    password = forms.CharField(label='Пароль', widget=forms.PasswordInput)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -64,10 +53,7 @@ class DocumentsLoginForm(forms.Form):
         if not username or not password:
             return cleaned_data
 
-        user = DocumentsUser.objects.filter(
-            username__iexact=username,
-            is_active=True,
-        ).first()
+        user = DocumentsUser.objects.filter(username__iexact=username, is_active=True).first()
 
         if user is None or not user.check_password(password):
             raise ValidationError('Неверный логин или пароль.')
@@ -82,9 +68,7 @@ class DocumentFolderForm(forms.ModelForm):
     class Meta:
         model = DocumentFolder
         fields = ('name',)
-        labels = {
-            'name': 'Название папки',
-        }
+        labels = {'name': 'Название папки'}
 
     def __init__(self, *args, user, **kwargs):
         self.user = user
@@ -93,13 +77,8 @@ class DocumentFolderForm(forms.ModelForm):
     def clean_name(self):
         name = self.cleaned_data['name'].strip()
 
-        if DocumentFolder.objects.filter(
-            user=self.user,
-            name__iexact=name,
-        ).exists():
-            raise ValidationError(
-                'Папка с таким названием уже существует.'
-            )
+        if DocumentFolder.objects.filter(user=self.user, name__iexact=name).exists():
+            raise ValidationError('Папка с таким названием уже существует.')
 
         return name
 
@@ -107,24 +86,17 @@ class DocumentFolderForm(forms.ModelForm):
 class DocumentUploadForm(forms.Form):
     file = forms.FileField(label='Файл')
     folder = forms.ModelChoiceField(
-        queryset=DocumentFolder.objects.none(),
-        required=False,
-        label='Папка',
-        empty_label='Корневая папка',
+        queryset=DocumentFolder.objects.none(), required=False, label='Папка', empty_label='Корневая папка'
     )
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['folder'].queryset = DocumentFolder.objects.filter(
-            user=user,
-        )
+        self.fields['folder'].queryset = DocumentFolder.objects.filter(user=user)
 
 
 class DocumentSelectionForm(forms.Form):
     files = forms.ModelMultipleChoiceField(
-        queryset=DocumentFile.objects.none(),
-        widget=forms.CheckboxSelectMultiple,
-        required=True,
+        queryset=DocumentFile.objects.none(), widget=forms.CheckboxSelectMultiple, required=True
     )
 
     def __init__(self, *args, user, **kwargs):

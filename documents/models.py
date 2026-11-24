@@ -10,7 +10,8 @@ from django.utils import timezone
 
 def document_upload_to(instance, filename):
     extension = Path(filename).suffix.lower()
-    return f'documents/{instance.user_id}/{uuid.uuid4().hex}{extension}'
+    folder = instance.folder_id or 'root'
+    return f'documents/{instance.user_id}/{folder}/{uuid.uuid4().hex}{extension}'
 
 
 class DocumentsUser(models.Model):
@@ -23,10 +24,7 @@ class DocumentsUser(models.Model):
         verbose_name = 'Пользователь документов'
         verbose_name_plural = 'Пользователи документов'
         constraints = [
-            models.UniqueConstraint(
-                Lower('username'),
-                name='documents_user_username_unique',
-            ),
+            models.UniqueConstraint(Lower('username'), name='documents_user_username_unique'),
         ]
 
     def __str__(self):
@@ -41,10 +39,7 @@ class DocumentsUser(models.Model):
 
 class DocumentFolder(models.Model):
     user = models.ForeignKey(
-        DocumentsUser,
-        on_delete=models.CASCADE,
-        related_name='folders',
-        verbose_name='Пользователь',
+        DocumentsUser, on_delete=models.CASCADE, related_name='folders', verbose_name='Пользователь'
     )
     name = models.CharField(max_length=255, verbose_name='Название')
     created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
@@ -54,11 +49,7 @@ class DocumentFolder(models.Model):
         verbose_name_plural = 'Папки'
         ordering = ('name',)
         constraints = [
-            models.UniqueConstraint(
-                'user',
-                Lower('name'),
-                name='documents_folder_user_name_unique',
-            ),
+            models.UniqueConstraint('user', Lower('name'), name='documents_folder_user_name_unique'),
         ]
 
     def __str__(self):
@@ -66,25 +57,11 @@ class DocumentFolder(models.Model):
 
 
 class DocumentFile(models.Model):
-    user = models.ForeignKey(
-        DocumentsUser,
-        on_delete=models.CASCADE,
-        related_name='files',
-        verbose_name='Пользователь',
-    )
+    user = models.ForeignKey(DocumentsUser, on_delete=models.CASCADE, related_name='files', verbose_name='Пользователь')
     folder = models.ForeignKey(
-        DocumentFolder,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='files',
-        verbose_name='Папка',
+        DocumentFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='files', verbose_name='Папка'
     )
-    file = models.FileField(
-        upload_to=document_upload_to,
-        max_length=500,
-        verbose_name='Файл',
-    )
+    file = models.FileField(upload_to=document_upload_to, max_length=500, verbose_name='Файл')
     original_name = models.CharField(max_length=255, verbose_name='Название файла')
     size = models.PositiveBigIntegerField(verbose_name='Размер')
     created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата загрузки')
@@ -105,6 +82,4 @@ class DocumentFile(models.Model):
         super().clean()
 
         if self.folder_id and self.folder.user_id != self.user_id:
-            raise ValidationError({
-                'folder': 'Папка не принадлежит пользователю.',
-            })
+            raise ValidationError({'folder': 'Папка не принадлежит пользователю.'})

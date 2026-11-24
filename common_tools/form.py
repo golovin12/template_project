@@ -1,5 +1,6 @@
 import datetime
 import re
+from typing import Any
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -31,7 +32,7 @@ class BaseFilterForm(forms.Form):
         if self.fields.get('per_page'):  # *поле могут убрать в наследнике
             self.fields['per_page'].choices = self.__class__.per_page_choices
 
-    def filtrate(self, qs: QuerySet):
+    def filtrate(self, qs: QuerySet) -> tuple['BaseFilterForm', QuerySet]:
         """
         Фильтрует qs если форма валидна, иначе возвращает пустой qs
         :return: (form, qs)
@@ -59,7 +60,7 @@ class BaseFilterForm(forms.Form):
         ]
         return ', '.join(title_set)
 
-    def format_value(self, field_name, value):
+    def format_value(self, field_name: str, value: Any) -> str:
         field = self.fields[field_name]
         label = field.label.lower()
 
@@ -117,7 +118,7 @@ class MultipleFileInput(forms.ClearableFileInput):
         self.accept = kwargs.pop('accept', '')
         super().__init__(*args, **kwargs)
 
-    def get_context(self, name, value, attrs):
+    def get_context(self, name: str, value: Any, attrs: Any) -> dict:
         context = super().get_context(name, value, attrs)
         context['widget']['accept'] = self.accept
         return context
@@ -133,7 +134,7 @@ class MultipleImageField(forms.ImageField):
 
         super().__init__(*args, **kwargs)
 
-    def clean(self, data, initial=None):
+    def clean(self, data, initial=None) -> list[bool]:
         if not data:
             return []
 
@@ -166,7 +167,7 @@ class PhoneField(forms.CharField):
         )
         super().__init__(*args, **kwargs)
 
-    def clean(self, value):
+    def clean(self, value) -> str:
         value = super().clean(value)
 
         if not value:
@@ -232,7 +233,7 @@ class CustomModelChoiceFieldInterface(forms.ChoiceField):
             )
         return value
 
-    def has_changed(self, initial, data):
+    def has_changed(self, initial, data) -> bool:
         if self.disabled:
             return False
         initial_value = '' if initial is None else self.prepare_value(initial)

@@ -1,6 +1,12 @@
 from asgiref.sync import markcoroutinefunction
 
+from django.http import HttpRequest, HttpResponse
+
 from .models import DocumentsUser
+
+
+class DocumentsHttpRequest(HttpRequest):
+    documents_user: DocumentsUser | None
 
 
 class DocumentsUserMiddleware:
@@ -12,16 +18,11 @@ class DocumentsUserMiddleware:
         self.get_response = get_response
         markcoroutinefunction(self)
 
-    async def __call__(self, request):
+    async def __call__(self, request: DocumentsHttpRequest) -> HttpResponse:
         user_id = await request.session.aget(self.session_key)
 
         request.documents_user = (
-            await DocumentsUser.objects.filter(
-                pk=user_id,
-                is_active=True,
-            ).afirst()
-            if user_id
-            else None
+            await DocumentsUser.objects.filter(pk=user_id, is_active=True).afirst() if user_id else None
         )
 
         return await self.get_response(request)

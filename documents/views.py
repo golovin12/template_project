@@ -1,4 +1,5 @@
 from asgiref.sync import sync_to_async
+
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -11,15 +12,11 @@ from django.views.decorators.http import require_POST
 from .auth import documents_login_required
 from .controllers import create_folder, delete_file, upload_file
 from .forms import (
-    DocumentsLoginForm,
-    DocumentsRegistrationForm,
-    DocumentFolderForm,
-    DocumentSelectionForm,
-    DocumentUploadForm,
+    DocumentsLoginForm, DocumentsRegistrationForm, DocumentFolderForm, DocumentSelectionForm, DocumentUploadForm
 )
 from .middleware import DocumentsUserMiddleware
 from .models import DocumentFile, DocumentFolder
-from .storage import get_user_document
+from .storage import get_user_document, open_document
 from .zip import create_zip_response
 
 
@@ -74,13 +71,9 @@ def _get_selected_file_ids(form):
     return list(form.cleaned_data['files'].values_list('pk', flat=True))
 
 
-def _open_document(document):
-    return document.file.open('rb')
-
-
 @sync_to_async
 def _open_document_async(document):
-    return _open_document(document)
+    return open_document(document)
 
 
 async def _file_iterator(file_object):
