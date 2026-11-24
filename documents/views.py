@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.http import content_disposition_header
 from django.views.decorators.http import require_POST
 
+from common_tools.async_files import storage_client, storage_file_iterator
 from common_tools.images import acompress_image
 from .auth import documents_login_required
 from .controllers import delete_file
@@ -19,13 +20,14 @@ from .forms import (
 )
 from .middleware import DocumentsHttpRequest, DocumentsUserMiddleware
 from .models import DocumentFile, DocumentFolder
-from .storage import get_user_document, open_document
 from .zip import create_zip_response
 
 
-def _render_index(
-        request: DocumentsHttpRequest, current_folder: DocumentFolder | None = None,
-        folder_form: DocumentFolderForm | None = None, upload_form: DocumentUploadForm | None = None,
+async def _render_index(
+        request: DocumentsHttpRequest,
+        current_folder: DocumentFolder | None = None,
+        folder_form: DocumentFolderForm | None = None,
+        upload_form: DocumentUploadForm | None = None,
         selection_form: DocumentSelectionForm | None = None,
 ) -> HttpResponse:
     user = request.documents_user
@@ -39,10 +41,22 @@ def _render_index(
     if selection_form is None:
         selection_form = DocumentSelectionForm(user=user)
 
+    folders = [folder async for folder in DocumentFolder.objects.filter(user=user)]
+    files = [document async for document in DocumentFile.objects.filter(user=user, folder=current_folder)]
+
+    folder_field = upload_form.fields['folder']
+    folder_choices = [(folder.pk, str(folder)) for folder in folders]
+
+    if folder_field.empty_label is not None:
+        folder_choices.insert(0, ('', folder_field.empty_label))
+
+    folder_field.choices = folder_choices
+    selection_form.fields['files'].choices = [(document.pk, str(document)) for document in files]
+
     return render(request, 'documents/index.html', {
-        'folders': DocumentFolder.objects.filter(user=user),
+        'folders': folders,
         'current_folder': current_folder,
-        'files': DocumentFile.objects.filter(user=user, folder=current_folder),
+        'files': files,
         'folder_form': folder_form,
         'upload_form': upload_form,
         'selection_form': selection_form,
@@ -54,21 +68,14 @@ def _validate_form(form_class, *args, **kwargs):
     return form, form.is_valid()
 
 
-def _get_selected_file_ids(form: DocumentSelectionForm) -> list[int]:
-    return list(form.cleaned_data['files'].values_list('pk', flat=True))
+async def _get_selected_file_ids(form: DocumentSelectionForm) -> list[int]:
+    return [document.pk async for document in form.cleaned_data['files']]
 
 
-async def _file_iterator(file_object) -> AsyncIterator[bytes]:
-    try:
-        while True:
-            chunk = await sync_to_async(file_object.read)(64 * 1024)
-
-            if not chunk:
-                break
-
+async def _file_iterator(filename: str) -> AsyncIterator[bytes]:
+    async with storage_client() as s3:
+        async for chunk in storage_file_iterator(filename, s3):
             yield chunk
-    finally:
-        await sync_to_async(file_object.close)()
 
 
 async def register(request: DocumentsHttpRequest):
@@ -78,7 +85,7 @@ async def register(request: DocumentsHttpRequest):
     form, is_valid = await sync_to_async(_validate_form)(DocumentsRegistrationForm, request.POST or None)
 
     if request.method == 'POST' and is_valid:
-        user = await sync_to_async(form.save)(commit=False)
+        user = form.save(commit=False)
 
         try:
             await user.asave()
@@ -89,7 +96,7 @@ async def register(request: DocumentsHttpRequest):
             await request.session.aset(DocumentsUserMiddleware.session_key, user.pk)
             return redirect('documents:index')
 
-    return await sync_to_async(render)(request, 'documents/register.html', {'form': form})
+    return render(request, 'documents/register.html', {'form': form})
 
 
 async def login(request: DocumentsHttpRequest):
@@ -103,7 +110,7 @@ async def login(request: DocumentsHttpRequest):
         await request.session.aset(DocumentsUserMiddleware.session_key, form.cleaned_data['user'].pk)
         return redirect('documents:index')
 
-    return await sync_to_async(render)(request, 'documents/login.html', {'form': form})
+    return render(request, 'documents/login.html', {'form': form})
 
 
 @require_POST
@@ -129,7 +136,7 @@ async def index(request: DocumentsHttpRequest):
         if current_folder is None:
             return redirect('documents:index')
 
-    return await sync_to_async(_render_index)(request, current_folder=current_folder)
+    return await _render_index(request, current_folder=current_folder)
 
 
 @require_POST
@@ -140,7 +147,7 @@ async def folder_create(request: DocumentsHttpRequest):
     )
 
     if is_valid:
-        folder = await sync_to_async(form.save)(commit=False)
+        folder = form.save(commit=False)
 
         try:
             await folder.asave()
@@ -150,7 +157,7 @@ async def folder_create(request: DocumentsHttpRequest):
             messages.success(request, 'Папка создана.')
             return redirect('documents:index')
 
-    return await sync_to_async(_render_index)(request, folder_form=form)
+    return await _render_index(request, folder_form=form)
 
 
 @require_POST
@@ -161,11 +168,10 @@ async def file_upload(request: DocumentsHttpRequest):
     )
 
     if is_valid:
-        document = await sync_to_async(form.save)(commit=False)
+        document = form.save(commit=False)
 
         uploaded_file = form.cleaned_data['file']
-        original_name = uploaded_file.name.replace('\\', '/').split('/')[-1]
-        original_name = original_name[:255]
+        original_name = uploaded_file.name.replace('\\', '/').split('/')[-1][:255]
 
         if not original_name:
             form.add_error('file', 'Некорректное имя файла.')
@@ -189,7 +195,7 @@ async def file_upload(request: DocumentsHttpRequest):
 
     current_folder = form.cleaned_data.get('folder')
 
-    return await sync_to_async(_render_index)(request, current_folder=current_folder, upload_form=form)
+    return await _render_index(request, current_folder=current_folder, upload_form=form)
 
 
 @require_POST
@@ -208,14 +214,12 @@ async def file_delete(request: DocumentsHttpRequest, file_id: int):
 @documents_login_required
 async def file_download(request: DocumentsHttpRequest, file_id: int):
     try:
-        document = await get_user_document(request.documents_user, file_id)
-    except ValidationError:
+        document = await DocumentFile.objects.aget(pk=file_id, user=request.documents_user)
+    except DocumentFile.DoesNotExist:
         messages.error(request, 'Файл не найден.')
         return redirect('documents:index')
 
-    file_object = await sync_to_async(open_document)(document)
-
-    response = StreamingHttpResponse(_file_iterator(file_object), content_type='application/octet-stream')
+    response = StreamingHttpResponse(_file_iterator(document.file.name), content_type='application/octet-stream')
     response['Content-Disposition'] = content_disposition_header(True, document.original_name)
 
     return response
@@ -232,7 +236,7 @@ async def files_download(request: DocumentsHttpRequest):
         messages.error(request, 'Выбери файлы для скачивания.')
         return redirect('documents:index')
 
-    file_ids = await sync_to_async(_get_selected_file_ids)(form)
+    file_ids = await _get_selected_file_ids(form)
 
     try:
         return await create_zip_response(request.documents_user, file_ids)
