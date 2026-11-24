@@ -1,6 +1,6 @@
 FROM python:3.11
 
-WORKDIR /repair_service
+WORKDIR /template_project
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

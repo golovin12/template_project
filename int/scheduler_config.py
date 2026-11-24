@@ -6,7 +6,6 @@ from int import tasks as main_tasks
 from django_dramatiq import tasks as django_dramatiq_tasks
 from apps.notifications import tasks as notification_tasks
 from apps.statistics import tasks as statistics_tasks
-from promoter_app import tasks as promotreck_tasks
 
 # ТИПЫ ЗАДАЧ (the alias name of the trigger (e.g. ``date``, ``interval`` or ``cron``))
 DATE = 'date'
@@ -84,19 +83,11 @@ def add_tasks(scheduler):
                           CRON, day_of_week='0', hour='1', minute='30', jitter=360)
         scheduler.add_job(bind_db_alias(main_tasks.create_every_month_backup.send_with_db_alias, alias),
                           CRON, day='1', hour='2', minute='0', jitter=360)
-    for alias in db_aliases:
         if alias == 'default':
             continue
         # statistics
         scheduler.add_job(bind_db_alias(statistics_tasks.rebuild_cities_statistic.send_with_db_alias, alias),
                           CRON, hour='2', minute='12', jitter=300)
-        # promotreck
-        scheduler.add_job(
-            bind_db_alias(promotreck_tasks.cleanup_old_promoter_assignment_photos.send_with_db_alias, alias),
-            CRON, hour='2', minute='30', jitter=300)
-        scheduler.add_job(
-            bind_db_alias(promotreck_tasks.cleanup_old_promoter_assignment_photos.send_with_db_alias, alias),
-            CRON, hour='14', jitter=180)
     # # примеры:
     # # scheduler.add_job(demo_tasks.operational_error_task.send, INTERVAL, minutes=1)
     # # scheduler.add_job(demo_tasks.send_email.send, INTERVAL, minutes=1, args=['golovin.dv@gmail.com'])

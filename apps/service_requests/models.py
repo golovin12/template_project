@@ -152,7 +152,6 @@ class ServiceRequest(models.Model):
         ordering = ('-pk',)
         indexes = (
             models.Index(fields=('branch', 'status')),
-            models.Index(fields=('branch', 'needs_call', 'status')),
             models.Index(fields=('city', 'status', 'closing_time')),
         )
 

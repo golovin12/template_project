@@ -227,28 +227,3 @@ class OrganizationUser(models.Model):
 
     def clear_cache(self):
         cache.delete(self._access_cache_key())
-
-
-class AppSettings(models.Model):
-    key = models.CharField('Ключ', max_length=100, unique=True, db_index=True)
-    value = models.JSONField('Значение', default=dict)
-
-    class Meta:
-        verbose_name = 'Настройка'
-        verbose_name_plural = 'Настройки'
-        ordering = ('key',)
-
-    def __str__(self):
-        return self.key
-
-    @classmethod
-    def get(cls, key: str, default=None):
-        try:
-            return cls.objects.get(key=key).value
-        except cls.DoesNotExist:
-            return default
-
-    @classmethod
-    def set(cls, key: str, value):
-        obj, _ = cls.objects.update_or_create(key=key, defaults={'value': value})
-        return obj

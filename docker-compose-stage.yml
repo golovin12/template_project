@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
     hostname: pgdb
     environment:
-      - POSTGRES_DB=repair_service
+      - POSTGRES_DB=template_project_default
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
@@ -129,9 +129,9 @@ services:
 
   worker:
     build: .
-    command: python manage.py rundramatiq --processes 2 --threads 1 --queues holding_connection backup notifications default promotreck
+    command: python manage.py rundramatiq --processes 2 --threads 1 --queues holding_connection backup notifications default
     environment:
-      - DJANGO_SETTINGS_MODULE=int.settings_production
+      - DJANGO_SETTINGS_MODULE=int.settings_stage
     restart: unless-stopped
     depends_on:
       - web
@@ -145,7 +145,7 @@ services:
     build: .
     command: python manage.py rundramatiq --processes 1 --threads 1 --queues notifications_queue
     environment:
-      - DJANGO_SETTINGS_MODULE=int.settings_production
+      - DJANGO_SETTINGS_MODULE=int.settings_stage
     restart: unless-stopped
     depends_on:
       - web
@@ -154,24 +154,6 @@ services:
       - pgdb
     networks:
       - local_network
-
-  telegram_control:
-    build: ./telegram_control
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8050
-    restart: unless-stopped
-    environment:
-      - DOMAIN=repairservice.flyawaymaking.ru:8443
-      - CERT_PATH=/telegram_control/certs/fullchain.crt
-    depends_on:
-      - pgdb
-    volumes:
-      - ./int/management/envs:/telegram_control/envs:ro
-      - ./int/management/certs:/telegram_control/certs:ro
-    expose:
-      - 8050
-    networks:
-      - local_network
-      - loadbalancing
 
 volumes:
   static_volume:

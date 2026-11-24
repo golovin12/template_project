@@ -1,6 +1,6 @@
 {
-  "name": "Int AtlantService",
-  "short_name": "Atlant",
+  "name": "Int Template Project",
+  "short_name": "Template",
   "icons": [
     {
         "src": "/static/int/img/favicon-16x16.png",

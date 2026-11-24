@@ -10,7 +10,7 @@ ENV = 'PROD'
 DEBUG = False
 TEMPLATES[0]['OPTIONS']['debug'] = False
 
-SERVER_DOMAIN = 'int.atlantservice.space'
+SERVER_DOMAIN = 'int.template_project.space'
 
 ALLOWED_HOSTS = ('web', 'localhost', '127.0.0.1', SERVER_DOMAIN)
 
@@ -23,7 +23,7 @@ ASGI_APPLICATION = 'int.asgi_production.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'auth_db',
+        'NAME': 'template_project_default',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -38,7 +38,7 @@ DATABASES = {
     },
     'organization_1': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'organization_1',
+        'NAME': 'template_project_organization_1',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -53,7 +53,7 @@ DATABASES = {
     },
     'organization_2': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'organization_2',
+        'NAME': 'template_project_organization_2',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -68,7 +68,7 @@ DATABASES = {
     },
     'organization_3': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'organization_3',
+        'NAME': 'template_project_organization_3',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -81,21 +81,6 @@ DATABASES = {
             }
         }
     },
-    'old': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'repair_service',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'pgdb',
-        'PORT': '5432',
-        'OPTIONS': {
-            'pool': {
-                'min_size': 1,
-                'max_size': 5,
-                'timeout': 10,
-            }
-        }
-    }
 }
 
 STORAGES = {

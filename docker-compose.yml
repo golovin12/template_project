@@ -21,7 +21,6 @@ services:
       - ./certbot/conf:/etc/letsencrypt:ro
     depends_on:
       - web
-      - telegram_control
     networks:
       - loadbalancing
 
@@ -81,7 +80,7 @@ services:
     hostname: pgdb
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
-      - POSTGRES_DB=repair_service
+      - POSTGRES_DB=template_project_default
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
@@ -119,7 +118,7 @@ services:
     expose:
       - 8000
     deploy:
-      replicas: 4
+      replicas: 3
     logging: *default-logging
 
   scheduler:
@@ -139,7 +138,7 @@ services:
 
   worker:
     build: .
-    command: python manage.py rundramatiq --processes 2 --threads 2 --queues holding_connection backup notifications statistics default promotreck
+    command: python manage.py rundramatiq --processes 2 --threads 2 --queues holding_connection backup notifications statistics default
     environment:
       - DJANGO_SETTINGS_MODULE=int.settings_production
     restart: always
@@ -165,23 +164,6 @@ services:
       - pgdb
     networks:
       - local_network
-    logging: *default-logging
-
-  telegram_control:
-    build: ./telegram_control
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8050
-    restart: always
-    environment:
-      - DOMAIN=int.atlantservice.space
-    depends_on:
-      - pgdb
-    volumes:
-      - ./int/management/envs:/telegram_control/envs:ro
-    expose:
-      - 8050
-    networks:
-      - local_network
-      - loadbalancing
     logging: *default-logging
 
 volumes:

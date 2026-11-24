@@ -44,7 +44,7 @@ ASGI_APPLICATION = 'int.asgi_stage.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'auth_db',
+        'NAME': 'template_project_default',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -59,7 +59,7 @@ DATABASES = {
     },
     'organization_1': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'organization_1',
+        'NAME': 'template_project_organization_1',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -74,7 +74,7 @@ DATABASES = {
     },
     'organization_2': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'organization_2',
+        'NAME': 'template_project_organization_2',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'pgdb',
@@ -87,21 +87,6 @@ DATABASES = {
             }
         }
     },
-    'old': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'repair_service',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'pgdb',
-        'PORT': '5432',
-        'OPTIONS': {
-            'pool': {
-                'min_size': 2,
-                'max_size': 20,
-                'timeout': 30,
-            }
-        }
-    }
 }
 
 STORAGES = {
