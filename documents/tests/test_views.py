@@ -34,6 +34,13 @@ class DocumentViewsTests(TestCase):
             'password': 'password123',
         })
 
+    def create_file(self, user, name, folder=None):
+        return async_to_sync(upload_file)(
+            user,
+            SimpleUploadedFile(name, b'content'),
+            folder_id=folder.pk if folder else None,
+        )
+
     def test_registration_is_available_without_login(self):
         response = self.client.get(reverse('documents:register'))
 
@@ -88,6 +95,61 @@ class DocumentViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn('documents_user_id', self.client.session)
 
+    def test_index_shows_root_folders_and_files_alphabetically(self):
+        DocumentFolder.objects.create(user=self.user, name='zeta')
+        DocumentFolder.objects.create(user=self.user, name='Alpha')
+
+        self.create_file(self.user, 'zeta.txt')
+        self.create_file(self.user, 'Alpha.txt')
+
+        self.login()
+
+        response = self.client.get(reverse('documents:index'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [folder.name for folder in response.context['folders']],
+            ['Alpha', 'zeta'],
+        )
+        self.assertEqual(
+            [document.original_name for document in response.context['files']],
+            ['Alpha.txt', 'zeta.txt'],
+        )
+
+    def test_index_shows_only_current_folder_files(self):
+        folder = DocumentFolder.objects.create(user=self.user, name='Photos')
+        another_folder = DocumentFolder.objects.create(user=self.user, name='Archive')
+
+        self.create_file(self.user, 'root.txt')
+        self.create_file(self.user, 'zeta.txt', folder)
+        self.create_file(self.user, 'Alpha.txt', folder)
+        self.create_file(self.user, 'other.txt', another_folder)
+
+        self.login()
+
+        response = self.client.get(reverse('documents:index'), {'folder': folder.pk})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['current_folder'], folder)
+        self.assertEqual(response.context['folders'], [])
+        self.assertEqual(
+            [document.original_name for document in response.context['files']],
+            ['Alpha.txt', 'zeta.txt'],
+        )
+        self.assertContains(response, '...')
+        self.assertContains(response, 'На уровень выше')
+        self.assertNotContains(response, 'root.txt')
+        self.assertNotContains(response, 'other.txt')
+
+    def test_index_rejects_another_users_folder(self):
+        folder = DocumentFolder.objects.create(user=self.another_user, name='Private')
+
+        self.login()
+
+        response = self.client.get(reverse('documents:index'), {'folder': folder.pk})
+
+        self.assertRedirects(response, reverse('documents:index'))
+
     def test_folder_upload_download_and_delete(self):
         self.login()
 
@@ -120,17 +182,15 @@ class DocumentViewsTests(TestCase):
         finally:
             response.close()
 
-        response = self.client.post(reverse('documents:file_delete', args=[document.pk]))
+        response = self.client.post(
+            f'{reverse("documents:file_delete", args=[document.pk])}?folder={folder.pk}'
+        )
 
-        self.assertRedirects(response, reverse('documents:index'))
+        self.assertRedirects(response, f'{reverse("documents:index")}?folder={folder.pk}')
         self.assertFalse(DocumentFile.objects.filter(pk=document.pk).exists())
 
     def test_user_cannot_download_another_users_file(self):
-        document = async_to_sync(upload_file)(
-            self.another_user,
-            SimpleUploadedFile('test.txt', b'content'),
-            folder_id=None,
-        )
+        document = self.create_file(self.another_user, 'test.txt')
 
         self.login()
 
@@ -139,11 +199,7 @@ class DocumentViewsTests(TestCase):
         self.assertRedirects(response, reverse('documents:index'))
 
     def test_user_cannot_select_another_users_file_for_zip(self):
-        document = async_to_sync(upload_file)(
-            self.another_user,
-            SimpleUploadedFile('test.txt', b'content'),
-            folder_id=None,
-        )
+        document = self.create_file(self.another_user, 'test.txt')
 
         self.login()
 

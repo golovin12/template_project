@@ -76,9 +76,7 @@
         <h5 class="mb-0">Содержимое</h5>
 
         <form id="zip-form" method="post"
-              action="
-
-                      {% url 'documents:files_download' %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
+              action="{% url 'documents:files_download' %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-primary btn-sm">
                 Скачать выбранные ZIP
@@ -133,9 +131,7 @@
                             <input type="checkbox" name="files" value="{{ document.pk }}" form="zip-form">
                         </td>
                         <td>
-                            <a href="
-
-                                    {% url 'documents:file_download' document.pk %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
+                            <a href="{% url 'documents:file_download' document.pk %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
                                 {{ document.original_name }}
                             </a>
                         </td>
@@ -143,9 +139,7 @@
                         <td>{{ document.size|filesizeformat }}</td>
                         <td class="text-right">
                             <form method="post"
-                                  action="
-
-                                          {% url 'documents:file_delete' document.pk %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
+                                  action="{% url 'documents:file_delete' document.pk %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-outline-danger btn-sm"
                                         onclick="return confirm('Удалить файл?')">
