@@ -5,6 +5,7 @@ from asgiref.sync import sync_to_async
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.db.models.functions import Lower
 from django.http import StreamingHttpResponse, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -23,43 +24,45 @@ from .models import DocumentFile, DocumentFolder
 from .zip import create_zip_response
 
 
+def _index_url(folder: DocumentFolder | None = None) -> str:
+    url = reverse('documents:index')
+    return f'{url}?folder={folder.pk}' if folder else url
+
+
+async def _get_folder(user, folder_id: str | None) -> DocumentFolder | None:
+    if not folder_id:
+        return None
+
+    return await DocumentFolder.objects.filter(pk=folder_id, user=user).afirst()
+
+
 async def _render_index(
         request: DocumentsHttpRequest,
         current_folder: DocumentFolder | None = None,
         folder_form: DocumentFolderForm | None = None,
         upload_form: DocumentUploadForm | None = None,
-        selection_form: DocumentSelectionForm | None = None,
 ) -> HttpResponse:
     user = request.documents_user
 
-    if folder_form is None:
-        folder_form = DocumentFolderForm(user=user)
+    folders = []
 
-    if upload_form is None:
-        upload_form = DocumentUploadForm(user=user, initial={'folder': current_folder})
+    if current_folder is None:
+        folders = [
+            folder async for folder in DocumentFolder.objects.filter(user=user).order_by(Lower('name'), 'pk')
+        ]
 
-    if selection_form is None:
-        selection_form = DocumentSelectionForm(user=user)
-
-    folders = [folder async for folder in DocumentFolder.objects.filter(user=user)]
-    files = [document async for document in DocumentFile.objects.filter(user=user, folder=current_folder)]
-
-    folder_field = upload_form.fields['folder']
-    folder_choices = [(folder.pk, str(folder)) for folder in folders]
-
-    if folder_field.empty_label is not None:
-        folder_choices.insert(0, ('', folder_field.empty_label))
-
-    folder_field.choices = folder_choices
-    selection_form.fields['files'].choices = [(document.pk, str(document)) for document in files]
+    files = [
+        document async for document in DocumentFile.objects.filter(
+            user=user, folder=current_folder
+        ).order_by(Lower('original_name'), 'pk')
+    ]
 
     return render(request, 'documents/index.html', {
         'folders': folders,
         'current_folder': current_folder,
         'files': files,
-        'folder_form': folder_form,
-        'upload_form': upload_form,
-        'selection_form': selection_form,
+        'folder_form': folder_form or DocumentFolderForm(user=user),
+        'upload_form': upload_form or DocumentUploadForm(user=user, initial={'folder': current_folder}),
     })
 
 
@@ -126,15 +129,11 @@ async def logout(request: DocumentsHttpRequest):
 
 @documents_login_required
 async def index(request: DocumentsHttpRequest):
-    user = request.documents_user
     folder_id = request.GET.get('folder')
-    current_folder = None
+    current_folder = await _get_folder(request.documents_user, folder_id)
 
-    if folder_id:
-        current_folder = await DocumentFolder.objects.filter(pk=folder_id, user=user).afirst()
-
-        if current_folder is None:
-            return redirect('documents:index')
+    if folder_id and current_folder is None:
+        return redirect('documents:index')
 
     return await _render_index(request, current_folder=current_folder)
 
@@ -188,10 +187,7 @@ async def file_upload(request: DocumentsHttpRequest):
 
             messages.success(request, 'Файл загружен.')
 
-            if folder:
-                return redirect(f'{reverse("documents:index")}?folder={folder.pk}')
-
-            return redirect('documents:index')
+            return redirect(_index_url(folder))
 
     current_folder = form.cleaned_data.get('folder')
 
@@ -201,6 +197,8 @@ async def file_upload(request: DocumentsHttpRequest):
 @require_POST
 @documents_login_required
 async def file_delete(request: DocumentsHttpRequest, file_id: int):
+    current_folder = await _get_folder(request.documents_user, request.GET.get('folder'))
+
     try:
         await delete_file(request.documents_user, file_id)
     except ValidationError:
@@ -208,7 +206,7 @@ async def file_delete(request: DocumentsHttpRequest, file_id: int):
     else:
         messages.success(request, 'Файл удалён.')
 
-    return redirect('documents:index')
+    return redirect(_index_url(current_folder))
 
 
 @documents_login_required
@@ -217,7 +215,8 @@ async def file_download(request: DocumentsHttpRequest, file_id: int):
         document = await DocumentFile.objects.aget(pk=file_id, user=request.documents_user)
     except DocumentFile.DoesNotExist:
         messages.error(request, 'Файл не найден.')
-        return redirect('documents:index')
+        current_folder = await _get_folder(request.documents_user, request.GET.get('folder'))
+        return redirect(_index_url(current_folder))
 
     response = StreamingHttpResponse(_file_iterator(document.file.name), content_type='application/octet-stream')
     response['Content-Disposition'] = content_disposition_header(True, document.original_name)
@@ -228,13 +227,15 @@ async def file_download(request: DocumentsHttpRequest, file_id: int):
 @require_POST
 @documents_login_required
 async def files_download(request: DocumentsHttpRequest):
+    current_folder = await _get_folder(request.documents_user, request.GET.get('folder'))
+
     form, is_valid = await sync_to_async(_validate_form)(
         DocumentSelectionForm, request.POST, user=request.documents_user
     )
 
     if not is_valid:
         messages.error(request, 'Выбери файлы для скачивания.')
-        return redirect('documents:index')
+        return redirect(_index_url(current_folder))
 
     file_ids = await _get_selected_file_ids(form)
 
@@ -242,4 +243,4 @@ async def files_download(request: DocumentsHttpRequest):
         return await create_zip_response(request.documents_user, file_ids)
     except ValidationError as error:
         messages.error(request, error.messages[0])
-        return redirect('documents:index')
+        return redirect(_index_url(current_folder))
