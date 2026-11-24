@@ -221,7 +221,7 @@ class TestServiceRequestForms(ServiceRequestTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('other_expenses', response.context['closing_form'].errors)
+        self.assertIn('other_expenses', response.context['form'].errors)
 
         instance.refresh_from_db()
         self.assertEqual(instance.status, ServiceRequest.STATUS.NEW)

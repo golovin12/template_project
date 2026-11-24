@@ -5,7 +5,7 @@ import dramatiq
 
 from django.contrib import admin
 from django.contrib.admin import AdminSite
-from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 
 from accounts.models import OrganizationUser
 from identity.models import AuthUser, Organization
@@ -21,17 +21,11 @@ class AuthUserWithOrganizationUser(AuthUser):
         abstract = True
 
 
-class OrganizationRequest(WSGIRequest):
+class OrganizationRequest(HttpRequest):
     user: AuthUserWithOrganizationUser
     available_organizations: dict[str, str]
     current_city_id: int
-
-    @property
-    def current_branch_ids(self) -> list[int]:
-        if self.current_city_id is None:
-            return self.user.organization_user.allowed_branch_ids
-
-        return self.user.organization_user.city_branch_map.get(self.current_city_id, [])
+    current_branch_ids: list[int]
 
 
 def actor(*args, **actor_kwargs):

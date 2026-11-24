@@ -42,10 +42,8 @@ class DashboardTable(tables.Table):
         return mark_safe(f'<div class="text-nowrap">{bookkeeping_btn}{statistic_btn}<div>')
 
 
-def get_entry_type_color(entry_type: str, is_hidden: bool = False) -> str:
+def get_entry_type_color(entry_type: str) -> str:
     """Получение цвета бухгалтерской записи"""
-    if is_hidden:
-        return 'primary'
     if entry_type == AccountingEntry.ENTRY_TYPE.INCOME:
         return 'success'
     elif entry_type == AccountingEntry.ENTRY_TYPE.EXPENSE:
@@ -63,7 +61,7 @@ class AccountingEntryTable(tables.Table):
         model = AccountingEntry
         attrs = {'class': 'table table-hover shadow table-responsive-md'}
         row_attrs = {
-            'class': lambda record: f'table-{get_entry_type_color(record.entry_type, record.hidden)}'
+            'class': lambda record: f'table-{get_entry_type_color(record.entry_type)}'
         }
 
     def before_render(self, request: OrganizationRequest):

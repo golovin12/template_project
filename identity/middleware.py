@@ -50,7 +50,8 @@ class OrganizationMiddleware(MiddlewareMixin):
         if created:
             organization_user.sync_and_save()
 
-        request.user.organization_user = organization_user
+        auth_user._organization_user = organization_user
+        organization_user._auth_user = auth_user
 
         city_session_key = f'current_city_id:{current_db_alias}'
         city_id = request.session.get(city_session_key)
@@ -60,6 +61,11 @@ class OrganizationMiddleware(MiddlewareMixin):
         else:
             request.current_city_id = None
             request.session.pop(city_session_key, None)
+
+        request.current_branch_ids = (
+            organization_user.allowed_branch_ids if request.current_city_id is None
+            else organization_user.city_branch_map.get(request.current_city_id, [])
+        )
 
     @staticmethod
     def get_available_organizations(user: AuthUser):

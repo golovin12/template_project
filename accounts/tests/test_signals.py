@@ -97,7 +97,8 @@ class TestOrganizationUserCitiesSignal(BaseTestCase):
 
         self.organization_user.cities.add(self.city)
 
-        self.assertIsNone(cache.get(self.organization_user._access_cache_key()))
+        self.assertEqual(cache.get(self.organization_user._access_cache_key()),
+                         {'branch_ids': [], 'city_branch_map': {}})
 
     def test_removing_city_clears_user_cache(self):
         self.organization_user.cities.add(self.city)

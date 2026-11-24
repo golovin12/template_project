@@ -176,10 +176,8 @@ class TestCityStatisticsService(CityStatisticsTestCase):
 
         self.assertEqual(self.service.get_branch_income_share_by_month(), [])
 
-    @patch('apps.statistics.services.city_stats.timezone.now')
-    def test_get_efficiency_stats(self, now_mock):
+    def test_get_efficiency_stats(self):
         now = timezone.now()
-        now_mock.return_value = now
 
         current_week = now.replace(hour=12, minute=0, second=0, microsecond=0)
         previous_week = current_week - timedelta(days=7)

@@ -55,12 +55,12 @@ class TestSelectCityView(BaseAccountsViewTestCase):
         self.assertNotIn('current_city_id:organization_1', self.client.session)
 
     def test_rejects_city_without_access(self):
-        other_city = City.objects.create(name='Казань')
-        Branch.objects.create(name='Центральный', city=other_city)
+        user = create_user_with_role('chief', USER_ROLES.CHIEF)
+        self.client.force_login(user)
 
         response = self.client.post(
             reverse('accounts:set_current_city'),
-            {'city_id': other_city.pk},
+            {'city_id': self.city.pk},
         )
 
         self.assertEqual(response.status_code, 200)
@@ -105,11 +105,7 @@ class TestUserDeleteView(BaseAccountsViewTestCase):
             reverse('accounts:delete', args=[organization_user_id]),
         )
 
-        self.assertRedirects(
-            response,
-            reverse('accounts:list'),
-            fetch_redirect_response=False,
-        )
+        self.assertRedirects(response, reverse('accounts:list'), fetch_redirect_response=False)
         self.assertFalse(AuthUser.objects.filter(pk=user_id).exists())
         self.assertFalse(OrganizationUser.objects.filter(pk=organization_user_id).exists())
 
@@ -121,9 +117,7 @@ class TestUserDeleteView(BaseAccountsViewTestCase):
         )
         organization_user = user.organization_user
 
-        response = self.client.get(
-            reverse('accounts:delete', args=[organization_user.pk]),
-        )
+        response = self.client.get(reverse('accounts:delete', args=[organization_user.pk]))
 
         self.assertEqual(response.status_code, 404)
         self.assertTrue(AuthUser.objects.filter(pk=user.pk).exists())
