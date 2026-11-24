@@ -19,7 +19,6 @@ from .models import (
     NotificationSettings,
 )
 from .providers.base import clean_html
-from .providers.registry import ProviderRegistry
 from .providers.telegram import TelegramProvider
 from .providers.vk import VKProvider
 from .services import NotificationSender, notification_sender
