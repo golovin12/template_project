@@ -4,7 +4,7 @@ from zipfile import ZipFile
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from documents.controllers import upload_file
 from documents.models import DocumentsUser
@@ -17,7 +17,7 @@ async def read_stream(response):
     ])
 
 
-class DocumentZipTests(TestCase):
+class DocumentZipTests(TransactionTestCase):
     def setUp(self):
         self.user = DocumentsUser.objects.create(username='user')
         self.another_user = DocumentsUser.objects.create(username='another')

@@ -3,7 +3,7 @@ from io import BytesIO
 from zipfile import ZipFile
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 
 from documents.controllers import upload_file
@@ -14,7 +14,7 @@ async def read_stream(response):
     return b''.join([chunk async for chunk in response.streaming_content])
 
 
-class DocumentViewsTests(TestCase):
+class DocumentViewsTests(TransactionTestCase):
     def setUp(self):
         self.user = DocumentsUser.objects.create(username='user')
         self.user.set_password('password123')

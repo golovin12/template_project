@@ -44,12 +44,11 @@ async def _render_index(
 ) -> HttpResponse:
     user = request.documents_user
 
-    folders = []
+    user_folders = [
+        folder async for folder in DocumentFolder.objects.filter(user=user).order_by(Lower('name'), 'pk')
+    ]
 
-    if current_folder is None:
-        folders = [
-            folder async for folder in DocumentFolder.objects.filter(user=user).order_by(Lower('name'), 'pk')
-        ]
+    folders = user_folders if current_folder is None else []
 
     files = [
         document async for document in DocumentFile.objects.filter(
@@ -57,12 +56,26 @@ async def _render_index(
         ).order_by(Lower('original_name'), 'pk')
     ]
 
+    folder_form = folder_form or DocumentFolderForm(user=user)
+    upload_form = upload_form or DocumentUploadForm(user=user, initial={'folder': current_folder})
+
+    folder_field = upload_form.fields['folder']
+    folder_choices = [
+        (folder.pk, folder_field.label_from_instance(folder))
+        for folder in user_folders
+    ]
+
+    if folder_field.empty_label is not None:
+        folder_choices.insert(0, ('', folder_field.empty_label))
+
+    folder_field.choices = folder_choices
+
     return render(request, 'documents/index.html', {
         'folders': folders,
         'current_folder': current_folder,
         'files': files,
-        'folder_form': folder_form or DocumentFolderForm(user=user),
-        'upload_form': upload_form or DocumentUploadForm(user=user, initial={'folder': current_folder}),
+        'folder_form': folder_form,
+        'upload_form': upload_form,
     })
 
 
