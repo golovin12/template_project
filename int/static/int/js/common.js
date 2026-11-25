@@ -38,33 +38,24 @@ $(function () {
 })
 
 $(function () {
-    $('.copy-btn').on('click', function () {
-        let $button = $(this);
-        let textToCopy = $button.attr('data-text');
-
-        // Создаем временный элемент для копирования
-        const $tempInput = $('<textarea>');
-        $('body').append($tempInput);
-        $tempInput.val(textToCopy)
+    $('.copy-btn').on('click', async function () {
+        const $button = $(this);
+        const textToCopy = $button.attr('data-text');
 
         try {
-            $tempInput.select();
-            document.execCommand('copy');
+            await navigator.clipboard.writeText(textToCopy);
 
-            $button.find('i')
-                .removeClass('text-secondary')
-                .addClass('text-success');
+            showNotification("Текст скопирован", "info")
+
+            const $icon = $button.find('i');
+
+            $icon.removeClass('text-secondary').addClass('text-success');
 
             setTimeout(function () {
-                $button.find('i')
-                    .removeClass('text-success')
-                    .addClass('text-secondary');
+                $icon.removeClass('text-success').addClass('text-secondary');
             }, 2000);
-
-        } catch (err) {
-            console.error('Ошибка при копировании:', err);
-        } finally {
-            $tempInput.remove();
+        } catch (error) {
+            console.error('Ошибка при копировании:', error);
         }
     });
 });

@@ -62,7 +62,7 @@
                     </button>
                     <div class="d-flex justify-content-center flex-wrap">
                         {% if svc_request.is_status_new %}
-                            <button type="button" class="btn btn-outline-primary action-btn" id="assignedBtn">
+                            <button type="button" class="btn btn-outline-info action-btn" id="assignedBtn">
                                 <i class="material-icons align-bottom">play_arrow</i> Мастер назначен
                             </button>
                         {% endif %}
@@ -97,7 +97,7 @@
             </div>
         </div>
         <div class="card-footer p-x-adaptive text-right p-0">
-            {% if svc_request.is_completed %}
+            {% if svc_request.is_status_completed %}
                 <a href="{% url 'service_request:request_copy' svc_request.pk %}"
                    class="btn btn-outline-info ml-auto py-2 px-5 my-2">
                     <i class="material-icons align-bottom">difference</i> Создать копию заявки
@@ -162,14 +162,31 @@
             }
         });
     </script>
-    {% if city_admin_form %}
-        <script>
+    <script>
+        {% if closing_form %}
+            $(function () {
+                bindAjaxFormSubmit(
+                    "#completeRequest",
+                    "#completeRequestBody"
+                );
+            })
+        {% endif %}
+        {% if diagnostic_form %}
+            $(function () {
+                bindAjaxFormSubmit(
+                    "#diagnosticRequest",
+                    "#diagnosticRequestBody"
+                );
+            })
+        {% endif %}
+        {% if city_admin_form %}
+            $('#id_city_admin_form-assigned_master').select2({width: '100%', dropdownAutoWidth: true})
             $(function () {
                 bindAjaxFormSubmit(
                     "#cityAdminUpdateRequest",
                     "#cityAdminUpdateRequestBody"
                 );
             })
-        </script>
-    {% endif %}
+        {% endif %}
+    </script>
 {% endblock %}

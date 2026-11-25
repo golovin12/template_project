@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.http import HttpResponse
 from django.views import View
@@ -10,13 +12,12 @@ from .services import CityStatisticsCacheService
 
 
 class CityStatisticsView(ChiefRequiredMixin, DetailView):
-    """Статистика города"""
     model = City
     template_name = 'statistics/city_statistics.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['statistics'] = CityStatisticsCacheService.get(self.object.pk)
+        context['statistics'] = json.loads(CityStatisticsCacheService.get(self.object.pk))
         return context
 
     def get_queryset(self):
@@ -25,7 +26,6 @@ class CityStatisticsView(ChiefRequiredMixin, DetailView):
 
 
 class ClearStaticCacheView(RoleRequiredMixin, View):
-    """Сброс статистики"""
 
     def get(self, request: OrganizationRequest, *args, **kwargs):
         if request.user.is_superuser:

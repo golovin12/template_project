@@ -69,13 +69,13 @@
                             <div class="card-header p-x-adaptive bg-light py-1">Прочая информация</div>
                             <div class="card-body p-x-adaptive pt-1">
                                 <div class="row">
-                                    {% bootstrap_field form.time_to_service form_group_class="col-12 col-lg-6 col-xl-3" %}
-                                    {% bootstrap_field form.sd_closing_date form_group_class="col-12 col-lg-6 col-xl-3" %}
-                                    {% bootstrap_field form.branch form_group_class="col-12 col-md-6" %}
-                                    {% bootstrap_field form.service_report form_group_class="col-12" %}
-                                    {% bootstrap_field form.closing_amount form_group_class="col-12 col-md-4" %}
-                                    {% bootstrap_field form.other_expenses form_group_class="col-12 col-md-4" %}
-                                    {% bootstrap_field form.status form_group_class="col-12 col-md-4" %}
+                                    {% bootstrap_field form.time_to_service form_group_class="col-12 col-md-6 col-xl-3 order-0" %}
+                                    {% bootstrap_field form.sd_closing_date form_group_class="col-12 col-md-6 col-xl-3 order-1 order-md-2 order-xl-1" %}
+                                    {% bootstrap_field form.branch form_group_class="col-12 col-md-6 order-2 order-md-1 order-xl-2" %}
+                                    {% bootstrap_field form.service_report form_group_class="col-12 order-last" %}
+                                    {% bootstrap_field form.closing_amount form_group_class="col-12 col-md-4 order-last" %}
+                                    {% bootstrap_field form.other_expenses form_group_class="col-12 col-md-4 order-last" %}
+                                    {% bootstrap_field form.status form_group_class="col-12 col-md-4 order-last" %}
                                 </div>
                             </div>
                         </div>
