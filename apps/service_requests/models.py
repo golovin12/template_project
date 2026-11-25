@@ -184,9 +184,12 @@ class ServiceRequest(models.Model):
         return self.status == self.STATUS.ON_WAY
 
     @property
-    def is_completed(self) -> bool:
-        """Завершена ли заявка"""
+    def is_status_completed(self) -> bool:
         return self.status == self.STATUS.COMPLETED
+
+    @property
+    def is_status_new(self) -> bool:
+        return self.status == self.STATUS.NEW
 
     def get_data_to_text(self) -> str:
         """Возвращает информацию о заявке в текстовом виде"""

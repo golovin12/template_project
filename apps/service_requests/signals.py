@@ -45,10 +45,10 @@ def after_change_service_request(sender, instance: ServiceRequest, created: bool
     elif instance.status == ServiceRequest.STATUS.CANCELED and instance.closing_time is None:
         ServiceRequest.objects.filter(pk=instance.pk).update(closing_time=timezone.now())
 
-    elif not instance.is_completed and instance.closing_time:
+    elif not instance.is_status_completed and instance.closing_time:
         ServiceRequest.objects.filter(pk=instance.pk).update(closing_time=None)
 
-    elif instance.is_completed and instance.closing_amount is not None:
+    elif instance.is_status_completed and instance.closing_amount is not None:
         if instance.closing_time is None:
             with transaction.atomic():
                 if instance.other_expenses is None:

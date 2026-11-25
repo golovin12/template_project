@@ -23,8 +23,8 @@ class RequestController:
         """Изменяет статус заявки на допустимый статус мастера."""
         statuses = ServiceRequest.STATUS
 
-        if (new_status in (statuses.ON_WAY, statuses.IN_PROGRESS)
-                and instance.status in (statuses.ASSIGNED, statuses.ON_WAY)):
+        if (new_status in (statuses.ASSIGNED, statuses.ON_WAY, statuses.IN_PROGRESS)
+                and instance.status in (statuses.NEW, statuses.ASSIGNED, statuses.ON_WAY)):
             instance.status = new_status
             instance.save(update_fields=['status'])
             return True

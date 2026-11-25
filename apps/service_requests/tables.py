@@ -78,7 +78,7 @@ class ServiceRequestTable(tables.Table):
                <a href={reverse("service_request:request_copy", args=(record.pk,))} title="Создать копию">
                    <i class="material-icons align-top text-info">difference</i>
                </a>
-           ''' if record.is_completed else ''
+           ''' if record.is_status_completed else ''
         return format_html(
             '''
             <div class="text-nowrap">

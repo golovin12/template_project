@@ -65,7 +65,7 @@ class ServiceRequestUpdateForm(BranchControlMixin, DeviceTypeControlMixin, Witho
         }
 
     def clean_status(self):
-        if self.instance.is_completed:
+        if self.instance.is_status_completed:
             raise ValidationError('Нельзя внести изменения в уже закрытую заявку!')
         return self.cleaned_data['status']
 

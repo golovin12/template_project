@@ -61,6 +61,12 @@
                         <i class="material-icons align-bottom">block</i> Отменить заявку
                     </button>
                     <div class="d-flex justify-content-center flex-wrap">
+                        {% if svc_request.is_status_new %}
+                            <button type="button" class="btn btn-outline-primary action-btn" id="assignedBtn">
+                                <i class="material-icons align-bottom">play_arrow</i> Мастер назначен
+                            </button>
+                        {% endif %}
+
                         {% if svc_request.is_status_assigned %}
                             <button type="button" class="btn btn-outline-primary action-btn" id="onWayBtn">
                                 <i class="material-icons align-bottom">play_arrow</i> Мастер выехал
@@ -128,6 +134,10 @@
     <script src="{% static 'int/js/form_ajax.js' %}"></script>
     <script>
         $(function () {
+            $('#assignedBtn').on('click', function () {
+                updateStatus('{{ svc_request.STATUS.ASSIGNED }}');
+            });
+
             $('#onWayBtn').on('click', function () {
                 updateStatus('{{ svc_request.STATUS.ON_WAY }}');
             });
