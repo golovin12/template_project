@@ -58,10 +58,6 @@
                     <p class="mb-1">Общий расход (включая зп):</p>
                     <h4 class="text-danger">{{ total_expense|format_money }} руб.</h4>
                 </div>
-                <div class="col-sm-6 col-md-3 order-2 order-sm-3 order-md-2">
-                    <p class="mb-1">Зарплата мастерам:</p>
-                    <h4 class="text-warning">{{ total_expense_salary|format_money }} руб.</h4>
-                </div>
                 <div class="col-sm-6 col-md-3 order-3 order-sm-1 order-md-3">
                     <p class="mb-1">Чистый доход:</p>
                     <h4 class="font-weight-bold text-{% if balance >= 0 %}success{% else %}danger{% endif %}">

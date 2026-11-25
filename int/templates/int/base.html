@@ -115,7 +115,7 @@
                                       class="w-100">
                                     {% csrf_token %}
                                     <select id="organization-select" name="organization_alias" class="form-select">
-                                        {% for db_alias, organization_name in request.available_organizations %}
+                                        {% for db_alias, organization_name in request.available_organizations.items %}
                                             <option value="{{ db_alias }}"
                                                     {% if db_alias == request.session.current_db_alias %}selected{% endif %}>
                                                 {{ organization_name }}

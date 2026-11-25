@@ -57,7 +57,7 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="col-12 col-sm-6">
+                        <div class="col-12">
                             <a href="{% url 'service_request:request_list' %}?condition=all"
                                class="btn btn-primary w-100" role="button">
                                 <i class="material-icons align-bottom">list</i> Все заявки
@@ -68,7 +68,7 @@
                                 <a href="{% url 'service_request:created_count' %}?as_month=on"
                                    class="btn btn-outline-secondary w-100" role="button">
                                     <i class="material-icons align-bottom">phone_callback</i>
-                                    Принятые заявки юзеров
+                                    Принятые заявки пользователей
                                 </a>
                             </div>
                         {% endif %}

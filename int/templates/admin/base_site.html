@@ -143,7 +143,7 @@
               style="display:inline-block; margin-right:10px;">
             {% csrf_token %}
             <select id="organization-select" name="organization_alias" style="min-width:180px;">
-                {% for db_alias, organization_name in request.available_organizations %}
+                {% for db_alias, organization_name in request.available_organizations.items %}
                     <option value="{{ db_alias }}"
                             {% if db_alias == request.session.current_db_alias %}selected{% endif %}>
                         {{ organization_name }}

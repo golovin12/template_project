@@ -1,9 +1,9 @@
 [
   {
-    "model": "accounts.user",
+    "model": "identity.authuser",
     "pk": 1,
     "fields": {
-      "password": "pbkdf2_sha256$1000000$G9ZilkZ2nNd14jtnL2WUgW$kM66PQ6TjoZ/xwrBgz0lwynasdZ2ZysHzD3ULQlXs8E=",
+      "password": "pbkdf2_sha256$1000000$868nd3SIqa8QL9HrTmvDcr$pxno8+GjPdfJO9KvsEIuJLq3ZYA05Q67Nw4EDBb1H8I=",
       "last_login": "2025-01-29T04:48:00.615",
       "is_superuser": true,
       "username": "admin",
