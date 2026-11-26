@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from documents.controllers import create_folder, upload_file, delete_file
+from documents.controllers import create_folder, upload_file, delete_file, delete_folder
 from documents.models import DocumentsUser, DocumentFolder, DocumentFile
 
 
@@ -17,10 +17,7 @@ class DocumentControllersTests(TestCase):
             document.file.delete(save=False)
 
     def test_create_folder(self):
-        folder = async_to_sync(create_folder)(
-            self.user,
-            '  Photos  ',
-        )
+        folder = async_to_sync(create_folder)(self.user, '  Photos  ')
 
         self.assertEqual(folder.name, 'Photos')
         self.assertEqual(folder.user, self.user)
@@ -32,20 +29,10 @@ class DocumentControllersTests(TestCase):
             async_to_sync(create_folder)(self.user, 'photos')
 
     def test_upload_file_to_folder(self):
-        folder = async_to_sync(create_folder)(
-            self.user,
-            'Photos',
-        )
-        uploaded_file = SimpleUploadedFile(
-            'photo.txt',
-            b'content',
-        )
+        folder = async_to_sync(create_folder)(self.user, 'Photos')
+        uploaded_file = SimpleUploadedFile('photo.txt', b'content')
 
-        document = async_to_sync(upload_file)(
-            self.user,
-            uploaded_file,
-            folder_id=folder.pk,
-        )
+        document = async_to_sync(upload_file)(self.user, uploaded_file, folder_id=folder.pk)
 
         self.assertEqual(document.user, self.user)
         self.assertEqual(document.folder, folder)
@@ -59,17 +46,13 @@ class DocumentControllersTests(TestCase):
         document = async_to_sync(upload_file)(
             self.user,
             SimpleUploadedFile('test.txt', b'content'),
-            folder_id=None,
         )
 
         self.assertIsNone(document.folder)
         self.assertEqual(document.original_name, 'test.txt')
 
     def test_upload_file_rejects_another_users_folder(self):
-        folder = DocumentFolder.objects.create(
-            user=self.another_user,
-            name='Photos',
-        )
+        folder = DocumentFolder.objects.create(user=self.another_user, name='Photos')
 
         with self.assertRaises(ValidationError):
             async_to_sync(upload_file)(
@@ -82,29 +65,54 @@ class DocumentControllersTests(TestCase):
         document = async_to_sync(upload_file)(
             self.user,
             SimpleUploadedFile('test.txt', b'content'),
-            folder_id=None,
         )
         file_name = document.file.name
 
-        async_to_sync(delete_file)(
-            self.user,
-            document.pk,
-        )
+        async_to_sync(delete_file)(self.user, document.pk)
 
-        self.assertFalse(
-            DocumentFile.objects.filter(pk=document.pk).exists()
-        )
+        self.assertFalse(DocumentFile.objects.filter(pk=document.pk).exists())
         self.assertFalse(document.file.storage.exists(file_name))
 
     def test_delete_file_rejects_another_users_file(self):
         document = async_to_sync(upload_file)(
             self.another_user,
             SimpleUploadedFile('test.txt', b'content'),
-            folder_id=None,
         )
 
         with self.assertRaises(ValidationError):
-            async_to_sync(delete_file)(
+            async_to_sync(delete_file)(self.user, document.pk)
+
+    def test_delete_folder_removes_files(self):
+        folder = async_to_sync(create_folder)(self.user, 'Photos')
+        documents = [
+            async_to_sync(upload_file)(
                 self.user,
-                document.pk,
+                SimpleUploadedFile(name, b'content'),
+                folder_id=folder.pk,
             )
+            for name in ('first.txt', 'second.txt')
+        ]
+        file_names = [document.file.name for document in documents]
+
+        async_to_sync(delete_folder)(self.user, folder.pk)
+
+        self.assertFalse(DocumentFolder.objects.filter(pk=folder.pk).exists())
+        self.assertFalse(DocumentFile.objects.filter(folder_id=folder.pk).exists())
+
+        for document, file_name in zip(documents, file_names):
+            self.assertFalse(document.file.storage.exists(file_name))
+
+    def test_delete_empty_folder(self):
+        folder = async_to_sync(create_folder)(self.user, 'Empty')
+
+        async_to_sync(delete_folder)(self.user, folder.pk)
+
+        self.assertFalse(DocumentFolder.objects.filter(pk=folder.pk).exists())
+
+    def test_delete_folder_rejects_another_users_folder(self):
+        folder = DocumentFolder.objects.create(user=self.another_user, name='Private')
+
+        with self.assertRaises(ValidationError):
+            async_to_sync(delete_folder)(self.user, folder.pk)
+
+        self.assertTrue(DocumentFolder.objects.filter(pk=folder.pk).exists())

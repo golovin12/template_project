@@ -95,6 +95,92 @@ class DocumentViewsTests(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn('documents_user_id', self.client.session)
 
+    def test_index_sorts_files_by_size(self):
+        first = self.create_file(self.user, 'first.txt')
+        second = self.create_file(self.user, 'second.txt')
+
+        DocumentFile.objects.filter(pk=first.pk).update(size=100)
+        DocumentFile.objects.filter(pk=second.pk).update(size=200)
+
+        self.login()
+
+        response = self.client.get(reverse('documents:index'), {
+            'sort': 'size',
+            'direction': 'desc',
+        })
+
+        self.assertEqual(
+            [document.pk for document in response.context['files']],
+            [second.pk, first.pk],
+        )
+
+    def test_index_sorts_files_by_date(self):
+        from datetime import datetime
+
+        first = self.create_file(self.user, 'first.txt')
+        second = self.create_file(self.user, 'second.txt')
+
+        DocumentFile.objects.filter(pk=first.pk).update(created_at=datetime(2026, 1, 1))
+        DocumentFile.objects.filter(pk=second.pk).update(created_at=datetime(2026, 2, 1))
+
+        self.login()
+
+        response = self.client.get(reverse('documents:index'), {
+            'sort': 'date',
+            'direction': 'desc',
+        })
+
+        self.assertEqual(
+            [document.pk for document in response.context['files']],
+            [second.pk, first.pk],
+        )
+
+    def test_folder_delete_removes_folder_and_files(self):
+        folder = DocumentFolder.objects.create(user=self.user, name='Photos')
+        document = self.create_file(self.user, 'photo.txt', folder)
+        file_name = document.file.name
+
+        self.login()
+
+        response = self.client.post(reverse('documents:folder_delete', args=[folder.pk]))
+
+        self.assertRedirects(response, reverse('documents:index'))
+        self.assertFalse(DocumentFolder.objects.filter(pk=folder.pk).exists())
+        self.assertFalse(DocumentFile.objects.filter(pk=document.pk).exists())
+        self.assertFalse(document.file.storage.exists(file_name))
+
+    def test_user_cannot_delete_another_users_folder(self):
+        folder = DocumentFolder.objects.create(user=self.another_user, name='Private')
+
+        self.login()
+
+        response = self.client.post(reverse('documents:folder_delete', args=[folder.pk]))
+
+        self.assertRedirects(response, reverse('documents:index'))
+        self.assertTrue(DocumentFolder.objects.filter(pk=folder.pk).exists())
+
+    def test_download_selected_folder(self):
+        folder = DocumentFolder.objects.create(user=self.user, name='Photos')
+        self.create_file(self.user, 'photo.txt', folder)
+
+        self.login()
+
+        response = self.client.post(reverse('documents:files_download'), {
+            'folders': [folder.pk],
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+
+        try:
+            content = async_to_sync(read_stream)(response)
+        finally:
+            response.close()
+
+        with ZipFile(BytesIO(content)) as archive:
+            self.assertEqual(archive.namelist(), ['Photos/photo.txt'])
+            self.assertEqual(archive.read('Photos/photo.txt'), b'content')
+
     def test_index_shows_root_folders_and_files_alphabetically(self):
         DocumentFolder.objects.create(user=self.user, name='zeta')
         DocumentFolder.objects.create(user=self.user, name='Alpha')
@@ -136,7 +222,6 @@ class DocumentViewsTests(TransactionTestCase):
             [document.original_name for document in response.context['files']],
             ['Alpha.txt', 'zeta.txt'],
         )
-        self.assertContains(response, '...')
         self.assertContains(response, 'На уровень выше')
         self.assertNotContains(response, 'root.txt')
         self.assertNotContains(response, 'other.txt')

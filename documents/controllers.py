@@ -77,7 +77,7 @@ async def delete_folder(user: DocumentsUser, folder_id: int) -> None:
         raise ValidationError('Папка не найдена.')
 
     await bulk_delete_media(
-        DocumentFile.objects.filter(folder=folder).values_list('file', flat=True)
+        DocumentFile.objects.filter(folder=folder).values_list('file', flat=True).aiterator()
     )
 
     await folder.adelete()
