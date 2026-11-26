@@ -48,13 +48,15 @@ class ServiceRequestAdmin(ManagerAdmin):
     )
     autocomplete_fields = ('branch',)
     list_select_related = ('parent', 'created_by', 'branch', 'city')
-    readonly_fields = ('request_number', 'request_time', 'closing_time', 'created_by', 'parent', 'closing_undo_widget')
+    readonly_fields = (
+        'request_number_display', 'request_time', 'closing_time', 'created_by', 'parent', 'closing_undo_widget'
+    )
     ordering = ('-pk',)
 
     fieldsets = (
         ('Основная информация', {
             'fields': (
-                'parent', 'created_by', 'request_number', ('status', 'closing_undo_widget'), 'branch'
+                'parent', 'created_by', 'request_number_display', ('status', 'closing_undo_widget'), 'branch'
             ),
         }),
         ('Информация о клиенте', {
@@ -100,3 +102,9 @@ class ServiceRequestAdmin(ManagerAdmin):
                 self.message_user(request, f'Ошибка: {e}', level='error')
 
         return super().changeform_view(request, object_id, form_url, extra_context)
+
+    @admin.display(description='Номер заявки')
+    def request_number_display(self, obj):
+        if obj and obj.pk:
+            return obj.request_number
+        return 'Будет назначен после сохранения'

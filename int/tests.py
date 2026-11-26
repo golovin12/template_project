@@ -65,10 +65,17 @@ class TestAdminPages(BaseTestCase):
 
     def _check_add_page(self, model: dict) -> None:
         """Проверка работы страницы добавления"""
-        model_has_add_perm = model['perms']['add']
-        if model_has_add_perm:
-            add_url = model['add_url']
-            self.assertEqual(self.client.get(add_url).status_code, self.ANSWER_CODE_OK, f'Error get({add_url})')
+        if not model['perms']['add']:
+            return
+
+        add_url = model['add_url']
+
+        try:
+            response = self.client.get(add_url)
+        except Exception as error:
+            self.fail(f'Ошибка открытия страницы добавления {add_url}: {error}')
+
+        self.assertEqual(response.status_code, self.ANSWER_CODE_OK, f'Error get({add_url})')
 
 
 class TestDatabaseContext(SimpleTestCase):
