@@ -1,0 +1,18 @@
+<div class="js-files-upload">
+    <div class="form-group">
+        <input type="file" name="{{ widget.name }}" id="{{ widget.attrs.id }}" class="d-none js-files-input" multiple
+               {% if widget.accept %}accept="{{ widget.accept }}"{% endif %}>
+
+        <button type="button" class="btn btn-outline-primary js-files-btn">
+            <i class="material-icons align-bottom">add</i> Добавить файлы
+        </button>
+    </div>
+
+    <div class="file-preview d-none js-files-preview"></div>
+
+    {% if widget.attrs.errors %}
+        <div class="text-danger">{{ widget.attrs.errors }}</div>
+    {% endif %}
+
+    <div class="js-files-hidden-inputs d-none"></div>
+</div>

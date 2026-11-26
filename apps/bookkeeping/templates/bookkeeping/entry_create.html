@@ -1,0 +1,68 @@
+{% extends "int/base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}Добавление бухгалтерской записи{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'bookkeeping:dashboard' %}">
+            <span class="material-icons">account_balance</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Добавление бухгалтерской записи
+    </li>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow mb-3">
+                <div class="card-header p-x-adaptive h4 bg-dark-blue">
+                    Добавление бухгалтерской записи
+                </div>
+                <div class="card-body p-x-adaptive pb-0">
+                    <form method="post" enctype="multipart/form-data" autocomplete="off" class="prevent-double-submit">
+                        {% csrf_token %}
+
+                        <div class="row mb-4">
+                        {% bootstrap_field form.amount form_group_class="col-12 col-md-6" %}
+                            {% bootstrap_field form.entry_type form_group_class="col-12 col-md-6" %}
+                            {% bootstrap_field form.branch form_group_class="col-12" %}
+                            {% bootstrap_field form.description form_group_class="col-12" %}
+                            {% bootstrap_field form.receipt_photo form_group_class="col-12" %}
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-success action-btn py-2 px-5">
+                                <i class="material-icons align-bottom">check</i> Создать запись
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_branch').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+            $('#id_entry_type').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+        });
+    </script>
+{% endblock %}

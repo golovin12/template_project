@@ -1,0 +1,51 @@
+{% extends 'int/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Редактирование города {{ form.instance }}{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'accounts:city_list' %}">
+            <span class="material-icons">map</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Редактирование города {{ form.instance }}
+    </li>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header p-x-adaptive h4 bg-dark-blue">
+                    Редактирование города {{ form.instance }}
+                </div>
+                <div class="card-body p-x-adaptive pb-1">
+                    <form method="post" autocomplete="off">
+                        {% csrf_token %}
+                        <div class="row mb-4">
+                            {% bootstrap_field form.name form_group_class="col-12" %}
+                            {% bootstrap_field form.is_active form_group_class="col-12" %}
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-success action-btn py-2 px-5">
+                                <i class="material-icons align-bottom">check</i> Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "int/filter_table.html" %}
+{% load static %}
+
+{% block title %}Все города{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'accounts:city_list' %}">
+            <span class="material-icons align-bottom">map</span> Все города
+        </a>
+    </li>
+    {% if filter_text %}
+        <li class="breadcrumb-item">{{ filter_text }}</li>
+    {% endif %}
+    <li class="ml-auto">
+        <button type="button" class="btn btn-sm btn-primary py-1 px-2" title="Создать город"
+                onclick="ajaxLoadForm(`{% url 'accounts:city_create' %}`, '#cityCreateModal', '#cityCreate', '#cityCreateBody')">
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            <i class="material-icons align-bottom">add_box</i> Новый город
+        </button>
+    </li>
+{% endblock %}
+
+{% block additional_filter_buttons %}
+    <a class="btn btn-outline-secondary mb-1" title="Сбросить фильтр" role="button"
+       href="{% url 'accounts:city_list' %}">
+        <i class="material-icons align-bottom">close</i>
+    </a>
+{% endblock %}
+
+{% block pre_table_content %}
+    {% include 'accounts/block/modal_city_create.html' %}
+{% endblock %}
+
+{% block extrascript %}
+    <script src="{% static 'int/js/form_ajax.js' %}"></script>
+    <script>
+        bindAjaxFormSubmit(
+            "#cityCreate",
+            "#cityCreateBody"
+        );
+    </script>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% spaceless %}
+    <div class="form-group">
+        <label class="control-label">{{ label }}</label>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-3">
+                    <div class="input-group">
+                        {% if audio %}
+                            <a title="Воспроизвести звук" href="{{ audio }}">
+                        {% endif %}
+                        <img src="{{ image }}" alt="captcha" class="captcha" style="border: 2px solid;"/>
+                        {% if audio %}</a>{% endif %}
+                    </div>
+                </div>
+                <div class="col-9">
+                    {% include "django/forms/widgets/multiwidget.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endspaceless %}

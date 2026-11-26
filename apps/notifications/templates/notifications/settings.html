@@ -1,0 +1,114 @@
+{% extends 'int/base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+
+{% block title %}Настройки уведомлений{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'home' %}">
+            <span class="material-icons align-bottom">home</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">Настройки уведомлений</li>
+{% endblock %}
+
+{% block content %}
+    <div class="card shadow mb-3">
+        <div class="card-header p-x-adaptive h4 bg-dark-blue">
+            Настройки уведомлений
+        </div>
+        <div class="card-body p-x-adaptive">
+            {# ================= VK ================= #}
+            <div class="alert {% if vk_channel %}alert-success{% else %}alert-warning{% endif %} mb-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                    <div>
+                        <img src="{% static 'int/img/vk-icon.svg' %}" width="24" alt="vk-logo"
+                             class="bg-light rounded-circle p-1 border border-secondary">
+
+                        <strong>VK:</strong>
+
+                        {% if vk_channel %}
+                            {{ vk_channel.username|default:vk_channel.recipient_id }}
+                        {% else %}
+                            Не подключен
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-2 mt-sm-0">
+                        <a href="{{ vk_bot_url }}" target="_blank" class="btn btn-outline-primary mr-2">
+                            Перейти к боту
+                        </a>
+
+                        <button class="btn btn-outline-secondary"
+                                onclick="copyToClipboard('{{ vk_connect_code }}')">
+                            Скопировать код
+                        </button>
+                    </div>
+                </div>
+
+                {% if not vk_channel %}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Отправьте боту этот код после перехода
+                        </small>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if form %}
+                <form method="post" id="notification-settings-form">
+                    {% csrf_token %}
+                    <div class="mb-3 pb-2 border-bottom">
+                        {% bootstrap_field form.enabled %}
+
+                        {% if not form.instance.enabled %}
+                            <div class="alert alert-warning mt-2">
+                                Уведомления отключены
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 pb-2 border-bottom">
+                        <p class="mb-3">
+                            <strong>Города:</strong>
+                        </p>
+
+                        {% for field in form %}
+                            {% if field.name|slice:"0:5" == "city_" %}
+                                <div class="form-check mb-2">
+                                    {{ field }}
+                                    <label class="form-check-label" for="{{ field.id_for_label }}">
+                                        {{ field.label }}
+                                    </label>
+                                </div>
+                            {% endif %}
+                        {% empty %}
+                            <p class="text-muted">Нет доступных городов</p>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mt-3 d-flex flex-column flex-sm-row justify-content-between">
+                        <button type="submit" class="btn btn-success py-2 px-5">
+                            <i class="material-icons align-bottom">check</i> Сохранить
+                        </button>
+                    </div>
+                </form>
+
+            {% else %}
+                <div class="alert alert-info">
+                    Подключите VK, чтобы получать уведомления
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showNotification('Код скопирован', 'success');
+        }
+    </script>
+{% endblock %}

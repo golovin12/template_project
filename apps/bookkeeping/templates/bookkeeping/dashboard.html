@@ -1,0 +1,42 @@
+{% extends "int/filter_table.html" %}
+{% load common_tags %}
+
+{% block title %}Бухгалтерия Городов{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'bookkeeping:dashboard' %}">
+            <span class="material-icons align-bottom">account_balance</span> Бухгалтерия Городов
+        </a>
+    </li>
+    {% if filter_text %}
+        <li class="breadcrumb-item">{{ filter_text }}</li>
+    {% endif %}
+    <li class="ml-auto">
+        <div class="btn-group">
+            <button class="btn btn-sm btn-primary py-1 px-2" data-toggle="modal" data-target="#entryTypeModal">
+                <i class="material-icons align-bottom">add_box</i> Новая запись
+            </button>
+        </div>
+    </li>
+{% endblock %}
+
+{% block additional_filter_buttons %}
+    <a class="btn btn-outline-secondary mb-1" title="Сбросить фильтр" role="button" href="{% url 'bookkeeping:dashboard' %}">
+        <i class="material-icons align-bottom">close</i>
+    </a>
+{% endblock %}
+
+{% block pre_table_content %}
+    {% include 'bookkeeping/block/modal_entry_type_create.html' %}
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_city').select2({
+                width: '100%', dropdownAutoWidth: true
+            }).data('select2').$container.attr("style", "min-width: 7.5em;")
+        })
+    </script>
+{% endblock %}

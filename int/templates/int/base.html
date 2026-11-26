@@ -1,0 +1,266 @@
+{% load bootstrap4 %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>{% block title %}Int Template Project{% endblock %}</title>
+
+    {% block meta_description %}{% endblock %}
+
+    {# Icon #}
+    <!-- Базовые иконки -->
+    <link rel="shortcut icon" href="{% static 'int/img/favicon.ico' %}" type="image/x-icon" sizes="any">
+    <link rel="icon" href="{% static 'int/img/favicon-32x32.png' %}" type="image/png" sizes="32x32">
+    <link rel="icon" href="{% static 'int/img/favicon-16x16.png' %}" type="image/png" sizes="16x16">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="{% static 'int/img/apple-touch-icon.png' %}" sizes="180x180">
+    <link rel="apple-touch-icon-precomposed" href="{% static 'int/img/apple-touch-icon-precomposed.png' %}"
+          sizes="180x180">
+
+    <!-- PWA (Manifest) -->
+    <link rel="manifest" href="{% static 'int/img/site.webmanifest' %}">
+
+    <!-- Windows Metro -->
+    <meta name="msapplication-TileImage" content="{% static 'int/img/mstile-150x150.png' %}">
+    <meta name="msapplication-config" content="{% static 'int/img/browserconfig.xml' %}">
+
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    {# init pickers #}
+    <link rel="stylesheet" href="{% static 'int/lib/air-datepicker/css/datepicker.min.css' %}">
+    {# bootstrap 4: jQuery first, then Popper.js, then Bootstrap JS #}
+    <script src="{% static 'int/lib/jq/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'int/lib/popper-1.14.7/popper.min.js' %}"></script>
+    <script src="{% static 'int/lib/bootstrap-4.6.2/js/bootstrap.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'int/lib/bootstrap-4.6.2/css/bootstrap.min.css' %}">
+    {# icon font #}
+    <link rel="stylesheet" href="{% static 'int/lib/material-symbols-outlined/main.css' %}">
+    {# select2 #}
+    <link rel="stylesheet" type='text/css' href="{% static 'int/lib/select2-4.0.13/css/select2.min.css' %}"/>
+    <script type="application/javascript" src="{% static 'int/lib/select2-4.0.13/js/select2.min.js' %}"></script>
+    {# common js #}
+    <link rel="stylesheet" href="{% static 'int/css/base.css' %}">
+    {# dark theme #}
+    <link rel="stylesheet" type="text/css" href="{% static 'int/lib/daynight-switcher/css/daynight-switcher.css' %}">
+    <link rel="alternate stylesheet" data-daynight-css="night" type="text/css" href="{% static 'int/css/night.css' %}">
+    <link rel="stylesheet" type='text/css' href="{% static 'int/css/files_upload.css' %}"/>
+    {% block extrastyle %}{% endblock %}
+</head>
+
+<body class="{% block body_class %}application{% endblock %}">
+
+{# МЕНЮ #}
+{% block navbar %}
+    <nav class="navbar navbar-expand-md navbar-light bg-light mb-2">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent"
+                    aria-controls="navbarContent" aria-expanded="false" aria-label="Меню">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse flex-wrap" id="navbarContent">
+                <ul class="navbar-nav mr-auto">
+                    <!-- Ссылки на страницы -->
+                    {% if request.user.is_authenticated %}
+                        {% if is_manager or is_city_admin or is_chief %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'service_request:request_main' %}">Система заявок</a>
+                            </li>
+                        {% endif %}
+                        {% if is_manager or is_chief %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'bookkeeping:dashboard' %}">Бухгалтерия</a>
+                            </li>
+                        {% endif %}
+                        {% if is_city_admin %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'bookkeeping:entry_create' %}">Добавить расходы</a>
+                            </li>
+                        {% endif %}
+                        {% if is_manager %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'accounts:list' %}">Пользователи</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                   aria-expanded="false">
+                                    Прочее
+                                </a>
+                                <ul class="dropdown-menu p-0">
+                                    <li>
+                                        <a class="nav-link" href="{% url 'service_request:device_type_list' %}">
+                                            Типы техники
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link" href="{% url 'accounts:branch_list' %}">Филиалы</a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link" href="{% url 'accounts:city_list' %}">Города</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                <!-- Кнопки пользователя -->
+                <ul class="navbar-nav ml-auto my-2 my-md-0">
+                    {% if request.user.is_authenticated %}
+                        {% if request.available_organizations|length > 1 %}
+                            <li class="nav-item">
+                                <form id="organization-form" method="post" action="{% url 'identity:select_organization' %}"
+                                      class="w-100">
+                                    {% csrf_token %}
+                                    <select id="organization-select" name="organization_alias" class="form-select">
+                                        {% for db_alias, organization_name in request.available_organizations.items %}
+                                            <option value="{{ db_alias }}"
+                                                    {% if db_alias == request.session.current_db_alias %}selected{% endif %}>
+                                                {{ organization_name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle font-weight-bold" href="#" role="button"
+                               data-toggle="dropdown" aria-expanded="false">
+                                {{ request.user.username }}
+                            </a>
+                            <ul class="dropdown-menu p-0">
+                                {% if is_manager or is_chief or is_city_admin %}
+                                    <li>
+                                        <a href="{% url 'notifications:settings' %}" class="nav-link">
+                                            Уведомления
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if request.user.is_superuser or request.user.organization_user.is_manager %}
+                                    <li>
+                                        <a class="nav-link" href="{% url 'admin:index' %}">Админка</a>
+                                    </li>
+                                {% endif %}
+                                <li>
+                                    <form action="{% url 'identity:logout' %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="nav-link btn">Выйти</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <form id="city-form" method="post" action="{% url 'accounts:set_current_city' %}">
+                                {% csrf_token %}
+                                <select id="city-select" name="city_id" class="form-select">
+                                    <option value="all">Все доступные города</option>
+                                    {% for city_id, city_name in request.user.organization_user.allowed_city_choices %}
+                                        <option value="{{ city_id }}"
+                                                {% if city_id == request.current_city_id %}selected{% endif %}>
+                                            {{ city_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'identity:login' %}">Войти</a></li>
+                    {% endif %}
+                    {# dark theme button #}
+                    <i class="material-icons">
+                        <a class="nav-link" data-daynight-moment="day" href="javascript:void(0);"></a>
+                    </i>
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block main %}
+    {# MAIN CONTENT #}
+    <main role="main">
+
+        {# НАВИГАЦИЯ #}
+        {% block breadcrumb_wrap %}
+            <div class="{% block breadcrumb_container_cls %}container{% endblock %}" id="container_breadcrumb">
+                <div class="row">
+                    <div class="col-12">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb p-x-adaptive {% block breadcrumb_cls %}{% endblock %}">
+                                {% block breadcrumb %}
+                                    <li class="breadcrumb-item"><a href="#">App</a></li>
+                                    <li class="breadcrumb-item"><a href="#">Path</a></li>
+                                    <li class="breadcrumb-item active">Info</li>
+                                {% endblock %}
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        {% endblock %}
+
+        {# СООБЩЕНИЯ #}
+        {% block messages_wrap %}
+            <div class="{% block messages_container_cls %}container{% endblock %}" id="container_messages">
+                <div class="row">
+                    <div class="col-12">
+                        {% block messages %}
+                            {# Display django.contrib.messages as Bootstrap alerts #}
+                            {% bootstrap_messages %}
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+        {% endblock %}
+
+        {# ОСНОВНОЙ БЛОК #}
+        {% block content_wrap %}
+            <div class="{% block content_container_cls %}container{% endblock %}" id="container_content">
+                {% block content %}
+                    app content
+                {% endblock %}
+                {% block additional_content %}{% endblock %}
+            </div>
+        {% endblock %}
+
+        {# Уведомления #}
+        <template id="notificationTemplate">
+            <div class="alert alert-dismissible fade show shadow" role="alert" style="margin-bottom: 10px;">
+                <strong class="notification-icon"></strong>
+                <span class="notification-message" style="white-space: pre-line;"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </template>
+
+        <div id="notificationContainer"
+             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px;
+             max-width: calc(100% - 40px); width: auto; margin: 0 auto;"></div>
+    </main>
+{% endblock %}
+
+{% block base_bottom %}
+    <script src="{% static 'int/lib/daynight-switcher/js/daynight-switcher.min.js' %}"></script>
+    {# переключатель для темной темы #}
+    <script src="{% static 'int/js/common.js' %}"></script>
+    <script src="{% static 'int/lib/air-datepicker/js/datepicker.min.js' %}"></script>
+    <script src="{% static 'int/lib/inputmask-5.x/jquery.inputmask.min.js' %}"></script>
+    <script src="{% static 'int/js/init_datepicker.js' %}"></script>
+    <script src="{% static 'int/js/init_phoneinput.js' %}"></script>
+    <script src="{% static 'int/js/init_searchinput.js' %}"></script>
+    <script src="{% static 'int/js/files_upload.js' %}"></script>
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        })
+    </script>
+{% endblock %}
+
+{# Additional JS #}
+{% block extrascript %}{% endblock %}
+
+</body>
+</html>

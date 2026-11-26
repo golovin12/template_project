@@ -1,0 +1,510 @@
+{% extends "int/base.html" %}
+{% load static %}
+
+{% block title %}Статистика города {{ object }}{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'bookkeeping:dashboard' %}">
+            <i class="material-icons align-bottom">article</i>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Статистика города {{ object }}
+    </li>
+{% endblock %}
+
+{% block content_container_cls %}container-fluid{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-dark-blue text-white">
+                    Эффективность города и филиалов
+                </div>
+                <div class="card-body p-0">
+                    <div id="efficiencyTableWrapper" style="overflow-x: auto;">
+                        <table class="table table-hover table-responsive-sm mb-0" id="efficiencyTable">
+                            <thead style="position: sticky; top: 0; background: white; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
+                            <tr>
+                                <th style="min-width: 150px;">Филиал</th>
+                                <th class="text-center" style="min-width: 90px;">Тек. неделя</th>
+                                <th class="text-center" style="min-width: 90px;">Прош. неделя</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow" id="chartCard">
+                <div class="card-header bg-dark-blue text-white">
+                    Средний чек по месяцам
+                </div>
+                <div class="card-body p-x-adaptive">
+                    <canvas id="avgCheckChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-dark-blue text-white">
+                    Доля дохода от филиалов
+                </div>
+                <div class="card-body p-x-adaptive">
+                    <canvas id="incomeByBranchChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-body p-0">
+                    <div class="table-responsive flex-fill" style="max-height: 100%; overflow-y: auto;">
+                        <table class="table table-bordered table-hover mb-0" id="deviceTable">
+                            <thead>
+                            <tr>
+                                <th class="bg-dark-blue text-white">Средний чек по типам техники</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% for branch in object.branches.all %}
+            {% if branch.is_active %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-body p-0 d-flex flex-column">
+                            <div class="table-responsive flex-fill">
+                                <table class="table table-bordered table-hover mb-0"
+                                       id="Branch{{ branch.pk }}RequestsTable">
+                                    <thead>
+                                    <tr>
+                                        <th class="bg-dark-blue text-white">
+                                            "{{ branch.name }}"<br>Число заявок по чеку
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script src="{% static 'int/lib/chartjs-2.9.3/js/chart.min.js' %}"></script>
+    <script src="{% static "int/lib/chartjs-2.9.3/js/chartjs-plugin-datalabels.min.js" %}"></script>
+    {{ statistics|json_script:"statistics-data" }}
+    <script>
+        const statistics = JSON.parse(document.getElementById('statistics-data').textContent);
+
+        function formatNumber(value) {
+            let num = parseFloat(value) || 0;
+            return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        }
+    </script>
+    <script>
+        $(function () {
+            let avgCheckData = statistics["avg_check_by_month"].slice(-6);
+
+            let labels = avgCheckData.map(item => item["month"]);
+            let avgChecks = avgCheckData.map(item => item["avg_check"]);
+
+            let ctx = document.getElementById('avgCheckChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Средний чек',
+                        data: avgChecks,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderWidth: 1,
+                        datalabels: {
+                            align: 'start',
+                            anchor: 'end',
+                            font: {
+                                weight: 'bold',
+                                size: 14
+                            },
+                            color: 'black',
+                            rotation: 315,
+                            formatter: function (value) {
+                                return formatNumber(value);
+                            },
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    legend: {
+                        display: false
+                    },
+                    plugins: {
+                        datalabels: {
+                            display: true
+                        },
+                    },
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                autoSkip: false
+                            }
+                        }],
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            let deviceData = statistics["avg_check_by_device"];
+
+            let months = Object.keys(deviceData).slice(-6);
+            let devicesSet = new Set();
+
+            months.forEach(function (month) {
+                Object.keys(deviceData[month]).forEach(function (device) {
+                    devicesSet.add(device);
+                });
+            });
+
+            let devices = Array.from(devicesSet);
+
+            let table = $('#deviceTable');
+
+            let theadRow = table.find('thead tr');
+            months.forEach(function (month) {
+                let th = $('<th></th>').text(month);
+                theadRow.append(th);
+            });
+
+            let tbody = table.find('tbody');
+            devices.forEach(function (device) {
+                let tr = $('<tr></tr>');
+
+                let th = $('<th></th>').text(device);
+                tr.append(th);
+
+                months.forEach(function (month) {
+                    let td = $('<td></td>').addClass("text-nowrap");
+                    let avgCheck = deviceData[month][device] ? formatNumber(deviceData[month][device]["avg_check"]) : '—';
+                    td.text(avgCheck);
+                    tr.append(td);
+                });
+
+                tbody.append(tr);
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            let branchesData = statistics["branch_requests_by_month"];
+
+            branchesData.forEach(function (branch) {
+                let monthData = branch["month_data"].slice(-6);
+                let table = $('#Branch' + branch["branch_id"] + 'RequestsTable');
+
+                let theadRow = table.find('thead tr');
+                monthData.forEach(function (monthData) {
+                    let th = $('<th></th>');
+                    th.text(monthData["month"]);
+                    theadRow.append(th);
+                });
+
+                let priceRanges = [
+                    {label: 'До 5000 руб.', key: 'r1'},
+                    {label: '5000 - 9999 руб.', key: 'r2'},
+                    {label: '10000 - 19999 руб.', key: 'r3'},
+                    {label: '20000+ руб.', key: 'r4'}
+                ];
+
+                let tbody = table.find('tbody');
+
+                priceRanges.forEach(function (range) {
+                    let row = $('<tr></tr>');
+
+                    let rangeLabelCell = $('<th></th>').text(range.label);
+                    row.append(rangeLabelCell);
+
+                    monthData.forEach(function (monthData) {
+                        let monthCell = $('<td></td>');
+                        let value = monthData[range.key] || 0;
+                        monthCell.text(value);
+                        row.append(monthCell);
+                    });
+
+                    tbody.append(row);
+                });
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            let branchIncome = statistics["branch_income_share_by_month"].slice(-6);
+
+            let labels = branchIncome.map(item => item["month"]);
+
+            let branchesSet = new Set();
+            branchIncome.forEach(item => {
+                item["branches"].forEach(branch => {
+                    branchesSet.add(branch["branch_name"]);
+                });
+            });
+
+            let branches = Array.from(branchesSet);
+
+            let datasets = branches.map((branch, index) => {
+                return {
+                    label: branch,
+                    data: branchIncome.map(item => {
+                        const branchData = item["branches"].find(b => b["branch_name"] === branch);
+                        return branchData ? branchData["percent"] : 0;
+                    }),
+                    backgroundColor: `hsl(${(160 + (index * 40)) % 360}, 70%, 60%, 0.5)`,
+                    stack: 'stack1',
+                };
+            });
+
+            let ctx = document.getElementById('incomeByBranchChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets,
+                },
+                options: {
+                    responsive: true,
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 20,
+                            padding: 10
+                        }
+                    },
+                    plugins: {
+                        datalabels: {
+                            display: true,
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: function (value) {
+                                if (value) return value + '%';
+                                return '';
+                            },
+                            anchor: 'end',
+                            align: 'start',
+                            rotation: 315,
+                        }
+                    },
+                    tooltips: {
+                        mode: 'index',
+                    },
+                    scales: {
+                        xAxes: [{
+                            stacked: true,
+                            ticks: {
+                                beginAtZero: true
+                            },
+                        }],
+                        yAxes: [{
+                            stacked: true,
+                            ticks: {
+                                beginAtZero: true,
+                                max: 100
+                            },
+                        }]
+                    }
+                }
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            let efficiencyData = statistics["efficiency"];
+
+            let monthsSet = new Set();
+
+            efficiencyData.city.months.forEach(function (item) {
+                monthsSet.add(item.month);
+            });
+
+            efficiencyData.branches.forEach(function (branch) {
+                branch.months.forEach(function (item) {
+                    monthsSet.add(item.month);
+                });
+            });
+
+            let months = Array.from(monthsSet).sort((a, b) => {
+                let partsA = a.split('.');
+                let partsB = b.split('.');
+                let dateA = new Date(partsA[1] + '.' + partsA[0]);
+                let dateB = new Date(partsB[1] + '.' + partsB[0]);
+                return dateB - dateA;
+            });
+
+            let theadRow = $('#efficiencyTable thead tr');
+            months.forEach(function (month) {
+                let th = $('<th></th>')
+                    .addClass('text-center')
+                    .css('min-width', '80px')
+                    .css('font-size', '0.8rem')
+                    .text(month);
+                theadRow.append(th);
+            });
+
+            function getMonthData(items, month) {
+                return items.find(item => item.month === month);
+            }
+
+            function createMonthCell(value, total, good) {
+                let td = $('<td class="p-1"></td>').addClass('text-center align-middle');
+
+                if (value !== undefined && value !== null) {
+                    let span = $('<span></span>')
+                        .addClass('efficiency-value')
+                        .css('font-weight', 'bold')
+                        .css('font-size', '1rem')
+                        .text(value.toFixed(1) + '%');
+
+                    if (value >= 70) span.addClass('text-success');
+                    else if (value >= 40) span.addClass('text-warning');
+                    else span.addClass('text-danger');
+
+                    td.append(span);
+
+                    if (total !== undefined) {
+                        let small = $('<small></small>')
+                            .addClass('text-muted')
+                            .css('font-size', '0.65rem')
+                            .css('display', 'block')
+                            .text(good + '/' + total);
+                        td.append(small);
+                    }
+                } else {
+                    td.html('<span class="text-muted">—</span>');
+                }
+
+                return td;
+            }
+
+            function createWeekCell(percent, total, good) {
+                let td = $('<td class="p-1"></td>').addClass('text-center align-middle');
+
+                if (total === 0 || total === undefined || total === null) {
+                    td.html('<span class="text-muted">—</span>');
+                    return td;
+                }
+
+                let span = $('<span></span>')
+                    .addClass('efficiency-value')
+                    .css('font-weight', 'bold')
+                    .css('font-size', '1rem')
+                    .text(percent.toFixed(1) + '%');
+
+                if (percent >= 70) span.addClass('text-success');
+                else if (percent >= 40) span.addClass('text-warning');
+                else span.addClass('text-danger');
+
+                td.append(span);
+
+                let small = $('<small></small>')
+                    .addClass('text-muted')
+                    .css('font-size', '0.65rem')
+                    .css('display', 'block')
+                    .text(good + '/' + total);
+
+                td.append(small);
+
+                return td;
+            }
+
+            let cityRow = $('<tr></tr>').addClass('table-primary');
+            let cityNameCell = $('<td class="p-1"></td>');
+            cityNameCell.append($('<strong></strong>').text(efficiencyData.city.name));
+            cityRow.append(cityNameCell);
+
+            cityRow.append(createWeekCell(
+                efficiencyData.city.current_week,
+                efficiencyData.city.current_week_total,
+                efficiencyData.city.current_week_good
+            ));
+
+            cityRow.append(createWeekCell(
+                efficiencyData.city.previous_week,
+                efficiencyData.city.previous_week_total,
+                efficiencyData.city.previous_week_good
+            ));
+
+            months.forEach(function (month) {
+                let monthData = getMonthData(efficiencyData.city.months, month);
+                let cell = createMonthCell(
+                    monthData ? monthData.efficiency : null,
+                    monthData ? monthData.total : null,
+                    monthData ? monthData.good : null
+                );
+                cityRow.append(cell);
+            });
+
+            $('#efficiencyTable tbody').append(cityRow);
+
+            efficiencyData.branches.forEach(function (branch) {
+                let branchRow = $('<tr></tr>');
+
+                let branchNameCell = $('<td class="p-1"></td>');
+                branchNameCell.text(branch.name);
+                branchRow.append(branchNameCell);
+
+                branchRow.append(createWeekCell(
+                    branch.current_week,
+                    branch.current_week_total,
+                    branch.current_week_good
+                ));
+
+                branchRow.append(createWeekCell(
+                    branch.previous_week,
+                    branch.previous_week_total,
+                    branch.previous_week_good
+                ));
+
+                months.forEach(function (month) {
+                    let monthData = getMonthData(branch.months, month);
+                    let cell = createMonthCell(
+                        monthData ? monthData.efficiency : null,
+                        monthData ? monthData.total : null,
+                        monthData ? monthData.good : null
+                    );
+                    branchRow.append(cell);
+                });
+
+                $('#efficiencyTable tbody').append(branchRow);
+            });
+        });
+    </script>
+{% endblock %}

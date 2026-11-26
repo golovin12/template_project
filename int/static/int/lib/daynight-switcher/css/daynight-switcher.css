@@ -1,0 +1,29 @@
+/* icons */
+a[data-daynight-moment="night"]:before {
+  content: "dark_mode";
+}
+a[data-daynight-moment="day"]:before {
+  content: "light_mode";
+}
+
+/* admin icon color */
+a[data-daynight-moment].admin {
+  color: #ffc !important;
+  border-bottom: none !important;
+}
+a[data-daynight-moment].admin:hover, a[data-daynight-moment].admin:focus-visible {
+  color: #79aec8 !important;
+}
+
+/* switcher animation - 300 ms */
+a[data-daynight-moment].animate:not(.admin) {
+  animation: animate 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.navbar-collapse.show a[data-daynight-moment] {
+  transform-origin: 0 50%;
+}
+@keyframes animate {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(0); }
+  100% { transform: scale(1); }
+}

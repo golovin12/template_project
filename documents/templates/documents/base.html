@@ -1,0 +1,109 @@
+{% load bootstrap4 %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>{% block title %}Документы{% endblock %}</title>
+
+    {% block meta_description %}{% endblock %}
+
+    {# Icon #}
+    <!-- Базовые иконки -->
+    <link rel="shortcut icon" href="{% static 'documents/img/favicon.ico' %}" type="image/x-icon" sizes="any">
+    <link rel="icon" href="{% static 'documents/img/favicon-32x32.png' %}" type="image/png" sizes="32x32">
+    <link rel="icon" href="{% static 'documents/img/favicon-16x16.png' %}" type="image/png" sizes="16x16">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="{% static 'documents/img/apple-touch-icon.png' %}" sizes="180x180">
+
+    <!-- PWA (Manifest) -->
+    <link rel="manifest" href="{% static 'documents/img/site.webmanifest' %}">
+
+    <!-- Windows Metro -->
+    <meta name="msapplication-TileImage" content="{% static 'documents/img/favicon-192x192.png' %}">
+    <meta name="msapplication-config" content="{% static 'documents/img/browserconfig.xml' %}">
+
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    {# bootstrap 4: jQuery first, then Popper.js, then Bootstrap JS #}
+    <script src="{% static 'int/lib/jq/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'int/lib/popper-1.14.7/popper.min.js' %}"></script>
+    <script src="{% static 'int/lib/bootstrap-4.6.2/js/bootstrap.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'int/lib/bootstrap-4.6.2/css/bootstrap.min.css' %}">
+    {# icon font #}
+    <link rel="stylesheet" href="{% static 'int/lib/material-symbols-outlined/main.css' %}">
+    {# select2 #}
+    <link rel="stylesheet" type='text/css' href="{% static 'int/lib/select2-4.0.13/css/select2.min.css' %}"/>
+    <script type="application/javascript" src="{% static 'int/lib/select2-4.0.13/js/select2.min.js' %}"></script>
+    {# common js #}
+    <link rel="stylesheet" href="{% static 'int/css/base.css' %}">
+    {# dark theme #}
+    <link rel="stylesheet" type="text/css" href="{% static 'int/lib/daynight-switcher/css/daynight-switcher.css' %}">
+    <link rel="alternate stylesheet" data-daynight-css="night" type="text/css" href="{% static 'int/css/night.css' %}">
+    {% block extrastyle %}{% endblock %}
+</head>
+
+<body class="{% block body_class %}application{% endblock %}">
+
+{% block main %}
+    {# MAIN CONTENT #}
+    <main role="main">
+        {# СООБЩЕНИЯ #}
+        {% block messages_wrap %}
+            <div class="{% block messages_container_cls %}container{% endblock %}" id="container_messages">
+                <div class="row">
+                    <div class="col-12">
+                        {% block messages %}
+                            {# Display django.contrib.messages as Bootstrap alerts #}
+                            {% bootstrap_messages %}
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+        {% endblock %}
+
+        {# ОСНОВНОЙ БЛОК #}
+        {% block content_wrap %}
+            <div class="{% block content_container_cls %}container{% endblock %}" id="container_content">
+                {% block content %}
+                    app content
+                {% endblock %}
+                {% block additional_content %}{% endblock %}
+            </div>
+        {% endblock %}
+
+        {# Уведомления #}
+        <template id="notificationTemplate">
+            <div class="alert alert-dismissible fade show shadow" role="alert" style="margin-bottom: 10px;">
+                <strong class="notification-icon"></strong>
+                <span class="notification-message" style="white-space: pre-line;"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </template>
+
+        <div id="notificationContainer"
+             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px;
+             max-width: calc(100% - 40px); width: auto; margin: 0 auto;"></div>
+    </main>
+{% endblock %}
+
+{% block base_bottom %}
+    <script src="{% static 'int/lib/daynight-switcher/js/daynight-switcher.min.js' %}"></script>
+    {# переключатель для темной темы #}
+    <script src="{% static 'documents/js/common.js' %}"></script>
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        })
+    </script>
+{% endblock %}
+
+{# Additional JS #}
+{% block extrascript %}{% endblock %}
+
+</body>
+</html>

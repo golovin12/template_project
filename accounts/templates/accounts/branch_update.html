@@ -1,0 +1,62 @@
+{% extends 'int/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Редактирование филиала {{ form.instance }}{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'accounts:branch_list' %}">
+            <span class="material-icons">apartment</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Редактирование филиала {{ form.instance }}
+    </li>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header p-x-adaptive h4 bg-dark-blue">
+                    Редактирование филиала {{ form.instance }}
+                </div>
+                <div class="card-body p-x-adaptive pb-1">
+                    <form method="post" autocomplete="off">
+                        {% csrf_token %}
+                        <div class="row mb-4">
+                            {% bootstrap_field form.city form_group_class="col-12 my-2" %}
+                            {% bootstrap_field form.name form_group_class="col-12" %}
+                            {% bootstrap_field form.is_active form_group_class="col-12" %}
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-success action-btn py-2 px-5">
+                                <i class="material-icons align-bottom">check</i> Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_city').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+        })
+    </script>
+{% endblock %}

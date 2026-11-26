@@ -1,0 +1,31 @@
+{% extends "int/filter_table.html" %}
+
+{% block title %}Принятые заявки юзеров{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'service_request:created_count' %}">
+            <span class="material-icons align-bottom">phone_callback</span> Принятые заявки юзеров
+        </a>
+    </li>
+    {% if filter_text %}
+        <li class="breadcrumb-item">{{ filter_text }}</li>
+    {% endif %}
+{% endblock %}
+
+{% block additional_filter_buttons %}
+    <a class="btn btn-outline-secondary mb-1" title="Сбросить фильтр" role="button"
+       href="{% url 'service_request:created_count' %}">
+        <i class="material-icons align-bottom">close</i>
+    </a>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_city').select2({
+                width: '100%', dropdownAutoWidth: true
+            }).data('select2').$container.attr("style", "min-width: 8em; max-width: 50em;")
+        })
+    </script>
+{% endblock %}

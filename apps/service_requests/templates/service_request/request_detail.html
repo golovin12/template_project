@@ -1,0 +1,192 @@
+{% extends "int/base.html" %}
+{% load svc_request_tags %}
+{% load static %}
+
+{% block title %}{{ svc_request }}{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'service_request:request_main' %}">
+            <span class="material-icons align-bottom">construction</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'service_request:request_list' %}">
+            <span class="material-icons">list</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        {{ svc_request }} {% if is_manager %}[Кем создана: {% firstof svc_request.created_by "—" %}]{% endif %}
+    </li>
+{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+
+        .datepicker {
+            z-index: 1060;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="card shadow mb-4">
+        <div class="card-header p-x-adaptive bg-dark-blue d-flex flex-column flex-sm-row justify-content-between align-items-sm-center">
+            <div class="h4">{{ svc_request }} ({{ svc_request.get_request_type_display }})</div>
+            <div class="mt-2 mt-sm-0">
+                {% get_status_badge svc_request %}
+                <a href="#" class="copy-btn" data-text="{{ svc_request.get_data_to_text }}"
+                   title="Копировать данные заявки">
+                    <i class="material-icons align-bottom text-secondary bg-white rounded">content_copy</i>
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-x-adaptive">
+            {% if svc_request.parent %}
+                <a href="{% url 'service_request:request_detail' svc_request.parent.pk %}" title="Просмотр">
+                    <i class="material-icons align-top text-primary">info</i> {{ svc_request.parent }} (первичная)
+                </a>
+            {% endif %}
+
+            {% include 'service_request/block/request_detail.html' %}
+
+            <div class="d-flex justify-content-center justify-content-md-between flex-wrap">
+                {% if not svc_request.is_status_end %}
+                    <button type="button" class="btn btn-outline-dark action-btn" id="cancelRequestBtn"
+                            data-toggle="modal" data-target="#confirmCancelModal">
+                        <i class="material-icons align-bottom">block</i> Отменить заявку
+                    </button>
+                    <div class="d-flex justify-content-center flex-wrap">
+                        {% if svc_request.is_status_new %}
+                            <button type="button" class="btn btn-outline-info action-btn" id="assignedBtn">
+                                <i class="material-icons align-bottom">play_arrow</i> Мастер назначен
+                            </button>
+                        {% endif %}
+
+                        {% if svc_request.is_status_assigned %}
+                            <button type="button" class="btn btn-outline-primary action-btn" id="onWayBtn">
+                                <i class="material-icons align-bottom">play_arrow</i> Мастер выехал
+                            </button>
+                        {% endif %}
+
+                        {% if svc_request.is_status_on_way %}
+                            <button type="button" class="btn btn-outline-warning action-btn" id="startWorkBtn">
+                                <i class="material-icons align-bottom">handyman</i> Мастер приступил к работе
+                            </button>
+                        {% endif %}
+
+                        {% if diagnostic_form %}
+                            <button type="button" class="btn btn-outline-danger action-btn" data-toggle="modal"
+                                    data-target="#diagnosticRequestModal">
+                                <i class="material-icons align-bottom">business_center</i> Сервисная диагностика
+                            </button>
+                        {% endif %}
+
+                        {% if closing_form %}
+                            <button type="button" class="btn btn-outline-success action-btn" data-toggle="modal"
+                                    data-target="#completeRequestModal">
+                                <i class="material-icons align-bottom">check</i> Завершить заявку
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-footer p-x-adaptive text-right p-0">
+            {% if svc_request.is_status_completed %}
+                <a href="{% url 'service_request:request_copy' svc_request.pk %}"
+                   class="btn btn-outline-info ml-auto py-2 px-5 my-2">
+                    <i class="material-icons align-bottom">difference</i> Создать копию заявки
+                </a>
+            {% elif city_admin_form %}
+                <button type="button" class="btn btn-outline-warning action-btn py-2 px-5 my-2" data-toggle="modal"
+                        data-target="#cityAdminUpdateRequestModal">
+                    <i class="material-icons align-bottom">edit</i> Редактировать
+                </button>
+            {% else %}
+                <a href="{% url 'service_request:request_update' svc_request.pk %}"
+                   class="btn btn-outline-warning action-btn py-2 px-5 my-2">
+                    <i class="material-icons align-bottom">edit</i> Редактировать
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if closing_form %}
+        {% include 'service_request/block/modal_complete_request.html' %}
+    {% endif %}
+    {% if diagnostic_form %}
+        {% include 'service_request/block/modal_diagnostic_request.html' %}
+    {% endif %}
+    {% if city_admin_form %}
+        {% include 'service_request/block/modal_city_admin_update_request.html' %}
+    {% endif %}
+    {% if not svc_request.is_status_end %}
+        {% include 'service_request/block/modal_confirm_cancel.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block extrascript %}
+    <script src="{% static 'int/js/form_ajax.js' %}"></script>
+    <script>
+        $(function () {
+            $('#assignedBtn').on('click', function () {
+                updateStatus('{{ svc_request.STATUS.ASSIGNED }}');
+            });
+
+            $('#onWayBtn').on('click', function () {
+                updateStatus('{{ svc_request.STATUS.ON_WAY }}');
+            });
+
+            $('#startWorkBtn').on('click', function () {
+                updateStatus('{{ svc_request.STATUS.IN_PROGRESS }}');
+            });
+
+            function updateStatus(newStatus) {
+                fetch("{% url 'service_request:update_master_status' svc_request.pk %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: `new_status=${newStatus}`
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
+            }
+        });
+    </script>
+    <script>
+        {% if closing_form %}
+            $(function () {
+                bindAjaxFormSubmit(
+                    "#completeRequest",
+                    "#completeRequestBody"
+                );
+            })
+        {% endif %}
+        {% if diagnostic_form %}
+            $(function () {
+                bindAjaxFormSubmit(
+                    "#diagnosticRequest",
+                    "#diagnosticRequestBody"
+                );
+            })
+        {% endif %}
+        {% if city_admin_form %}
+            $('#id_city_admin_form-assigned_master').select2({width: '100%', dropdownAutoWidth: true})
+            $(function () {
+                bindAjaxFormSubmit(
+                    "#cityAdminUpdateRequest",
+                    "#cityAdminUpdateRequestBody"
+                );
+            })
+        {% endif %}
+    </script>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends 'int/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Создание пользователя{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'accounts:list' %}">
+            <span class="material-icons">person</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Создание пользователя
+    </li>
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header p-x-adaptive h4 bg-dark-blue">
+                    Создание нового пользователя
+                </div>
+                <div class="card-body p-x-adaptive pb-0">
+                    <form method="post" autocomplete="off" class="prevent-double-submit">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-12 mb-2">
+                                <div class="row align-items-end">
+                                    <div class="col pr-0">
+                                        {% bootstrap_field form.username show_help=False %}
+                                    </div>
+                                    <div class="col-auto mb-3 pl-0">
+                                        <button type="button" class="btn btn-outline-primary" data-toggle="modal"
+                                                data-target="#associateModal">
+                                            <i class="material-icons align-bottom">link</i>
+                                            <span class="d-none d-sm-inline"> Связать</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% bootstrap_field form.role form_group_class="col-lg-6" %}
+                            {% bootstrap_field form.all_cities_access form_group_class="col-lg-6" %}
+                            {% bootstrap_field form.cities form_group_class="col-12" %}
+                            <div id="master-note" class="col-12 alert alert-info mt-3" style="display: none;">
+                                * Также будет создан профиль мастера, чтобы ему могли назначать заявки!
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {% bootstrap_field form.last_name form_group_class="col-12" %}
+                            {% bootstrap_field form.first_name form_group_class="col-lg-6" %}
+                            {% bootstrap_field form.second_name form_group_class="col-lg-6" %}
+                        </div>
+
+                        <div class="row mb-4 mt-3">
+                            {% bootstrap_field form.password1 form_group_class="col-lg-6" show_help=False %}
+                            {% bootstrap_field form.password2 form_group_class="col-lg-6" %}
+                        </div>
+
+                        <div class="form-group text-right">
+                            <button type="submit" class="btn btn-success action-btn">
+                                <i class="material-icons align-bottom">check</i> Создать пользователя
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="associateModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-dark-blue">
+                    <h5 class="modal-title text-white">Привязка существующего пользователя</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="user-select">Выберите пользователя</label>
+                        <select id="user-select" class="django-select2 form-control">
+                            <option></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="select-user-btn" disabled>Выбрать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_role').select2({
+                width: '100%',
+                dropdownAutoWidth: true
+            });
+            $('#id_cities').select2({
+                width: '100%',
+                dropdownAutoWidth: true
+            });
+
+            $('#id_role').change(function () {
+                if ($(this).val() === 'master') {
+                    // Показываем текст для мастера с анимацией
+                    $('#master-note').fadeIn(300);
+                } else {
+                    // Скрываем текст с анимацией
+                    $('#master-note').fadeOut(300);
+                }
+            });
+
+            if ($('#id_role').val() === 'master') {
+                $('#master-note').show();
+            }
+        });
+
+        $(function () {
+            let loaded = false;
+            let selectedUserId = null;
+
+            const $modal = $('#associateModal');
+            const $select = $('#user-select');
+
+            function initSelect(data) {
+                $select.select2({
+                    dropdownParent: $modal,
+                    placeholder: 'Введите имя или логин...',
+                    allowClear: true,
+                    data: data,
+                    width: '100%'
+                });
+
+                $select.on('select2:select', function (e) {
+                    selectedUserId = e.params.data.id;
+                    $('#select-user-btn').prop('disabled', false);
+                });
+
+                $select.on('select2:clear', function () {
+                    selectedUserId = null;
+                    $('#select-user-btn').prop('disabled', true);
+                });
+            }
+
+            $modal.on('show.bs.modal', function () {
+                if (loaded) {
+                    return;
+                }
+
+                $.get("{% url 'accounts:user_autocomplete' %}", function (response) {
+                    initSelect(response.results);
+                    loaded = true;
+                });
+            });
+
+            $modal.on('hidden.bs.modal', function () {
+                $select.val(null).trigger('change');
+                $('#select-user-btn').prop('disabled', true);
+                selectedUserId = null;
+            });
+
+            $('#select-user-btn').click(function () {
+                if (!selectedUserId) {
+                    return;
+                }
+
+                $modal.modal('hide');
+                window.location.href = "{% url 'accounts:associate' %}?user_id=" + selectedUserId;
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,22 @@
+[flake8]
+
+max-line-length = 120
+
+exclude =
+    venv,
+    .git,
+    __pycache__,
+    _docs,
+    *_examples*,
+    media,
+    */migrations/,
+    */tests/,
+    */samples/,
+    int/settings*.py,
+    db.sqlite3,
+    manage.py,
+
+# disabled checks:
+extend-ignore =
+    # W291 trailing whitespace
+    W291,

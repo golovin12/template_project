@@ -1,0 +1,119 @@
+{% extends 'int/base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+
+{% block title %}{{ svc_request }}{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        label {
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'service_request:request_main' %}">
+            <span class="material-icons align-bottom">construction</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        <a class="h4" href="{% url 'service_request:request_list' %}">
+            <span class="material-icons">list</span>
+        </a>
+    </li>
+    <li class="breadcrumb-item">
+        Редактирование заявки #{{ svc_request.request_number }}
+    </li>
+{% endblock %}
+
+{% block content %}
+    <div class="card shadow mb-4">
+        <div class="card-header p-x-adaptive h4 bg-dark-blue">
+            Редактирование заявки #{{ svc_request.request_number }}
+        </div>
+        <div class="card-body p-0">
+            <form method="post" enctype="multipart/form-data" autocomplete="off" class="prevent-double-submit">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 d-flex">
+                        <div class="card shadow mb-4">
+                            <div class="card-header p-x-adaptive bg-light py-1">Информация о клиенте</div>
+                            <div class="card-body p-x-adaptive pt-1">
+                                <div class="row">
+                                    {% bootstrap_field form.client_name form_group_class="col-12" %}
+                                    {% bootstrap_field form.request_type form_group_class="col-12 col-lg-6" %}
+                                    {% bootstrap_field form.client_phone form_group_class="col-12 col-lg-6" %}
+                                    {% bootstrap_field form.client_address form_group_class="col-12 col-sm-9 pr-sm-1" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 d-flex">
+                        <div class="card shadow mb-4">
+                            <div class="card-header p-x-adaptive bg-light py-1">Информация о проблеме</div>
+                            <div class="card-body p-x-adaptive pt-1">
+                                <div class="row">
+                                    {% bootstrap_field form.device_type form_group_class="col-12" %}
+                                    {% bootstrap_field form.problem_description form_group_class="col-12" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-header p-x-adaptive bg-light py-1">Прочая информация</div>
+                            <div class="card-body p-x-adaptive pt-1">
+                                <div class="row">
+                                    {% bootstrap_field form.time_to_service form_group_class="col-12 col-md-6 col-xl-3 order-0" %}
+                                    {% bootstrap_field form.sd_closing_date form_group_class="col-12 col-md-6 col-xl-3 order-1 order-md-2 order-xl-1" %}
+                                    {% bootstrap_field form.branch form_group_class="col-12 col-md-6 order-2 order-md-1 order-xl-2" %}
+                                    {% bootstrap_field form.service_report form_group_class="col-12 order-last" %}
+                                    {% bootstrap_field form.closing_amount form_group_class="col-12 col-md-4 order-last" %}
+                                    {% bootstrap_field form.other_expenses form_group_class="col-12 col-md-4 order-last" %}
+                                    {% bootstrap_field form.status form_group_class="col-12 col-md-4 order-last" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center">
+                        <a href="{% url 'service_request:request_detail' pk=svc_request.pk %}"
+                           class="btn btn-outline-info py-2 action-btn m-2">
+                            <i class="material-icons align-bottom">keyboard_arrow_left</i> Назад
+                        </a>
+
+                        <button type="submit" class="btn btn-success py-2 px-5 m-2">
+                            <i class="material-icons align-bottom">check</i> Сохранить изменения
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            $('#id_branch').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+            $('#id_request_type').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+            $('#id_status').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+            $('#id_device_type').select2({
+                width: '100%', dropdownAutoWidth: true
+            })
+        })
+    </script>
+    {{ device_type_branches|json_script:"device-type-branches" }}
+    <script src="{% static 'service_request/js/filter_branch_by_device_type.js' %}"></script>
+{% endblock %}

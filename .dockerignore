@@ -1,0 +1,14 @@
+*.pyc
+*.log
+*~
+__pycache__
+.idea
+venv
+*.sqlite3
+*.spec
+staticfiles
+media
+certbot
+*certs/
+*.orig
+git

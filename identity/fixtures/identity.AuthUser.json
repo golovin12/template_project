@@ -1,0 +1,20 @@
+[
+  {
+    "model": "identity.authuser",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$868nd3SIqa8QL9HrTmvDcr$pxno8+GjPdfJO9KvsEIuJLq3ZYA05Q67Nw4EDBb1H8I=",
+      "last_login": "2025-01-29T04:48:00.615",
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "Admin",
+      "last_name": "",
+      "second_name": "",
+      "email": "",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-01-01T00:00:00.144",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]

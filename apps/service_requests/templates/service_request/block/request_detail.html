@@ -1,0 +1,28 @@
+{% load svc_request_tags %}
+
+<div class="row">
+    <div class="col-md-6">
+        <p><strong>Филиал:</strong> {{ svc_request.branch }}</p>
+        <p><strong>Время принятия заявки:</strong> {{ svc_request.get_request_time_display }}</p>
+        <p><strong>Время для обслуживания:</strong> {{ svc_request.get_time_to_service_display }}</p>
+        {% if svc_request.sd_closing_date %}
+            <p><strong>Дата для закрытия СД:</strong> {{ svc_request.get_sd_closing_date_display }}</p>
+        {% endif %}
+        <p><strong>Время закрытия:</strong> {{ svc_request.get_closing_time_display }}</p>
+    </div>
+    <div class="col-md-6">
+        <p><strong>Имя клиента:</strong> {{ svc_request.client_name }}</p>
+        <p>
+            <strong>Адрес клиента:</strong> {{ svc_request.client_address }}
+        </p>
+        <div class="row">
+            <p class="col"><strong>Телефон:</strong> {{ svc_request|client_phone_for_user:request.user.organization_user }}</p>
+        </div>
+        <p><strong>Тип техники:</strong> {{ svc_request.device_type }}</p>
+        <p style="line-height: 1">
+            <strong>Описание проблемы:</strong> {{ svc_request.problem_description|linebreaksbr }}
+        </p>
+    </div>
+</div>
+
+{% include 'service_request/block/request_close_data.html' with svc_request=svc_request %}
