@@ -6,6 +6,7 @@ aiofiles==25.1.0
 asynczipstream==1.0.1
 Django==5.2.15
 django-bootstrap4==25.3
+dotenv==0.9.9
 git+https://github.com/golovin12/django_dramatiq_fork.git@cf5201330c1389ab72eaf8418a0af7f4ac33be6c#egg=django_dramatiq
 django-redis==6.0.0
 Django-Select2==8.4.3
