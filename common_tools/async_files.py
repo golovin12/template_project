@@ -1,7 +1,9 @@
+import asyncio
 import os
+import posixpath
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import AsyncIterable, AsyncIterator, cast
+from typing import AsyncIterable, AsyncIterator, cast, Iterable
 
 import aiofiles
 import aioboto3
@@ -97,3 +99,52 @@ async def generate_zip(files: AsyncIterable[ZipFileEntry], s3: S3Client | None =
 
     async for chunk in archive:
         yield chunk
+
+
+async def delete_local_file(storage, name: str) -> None:
+    await asyncio.to_thread(storage.delete, name)
+
+
+async def async_iter(file_names: Iterable[str] | AsyncIterable[str]) -> AsyncIterator[str]:
+    if isinstance(file_names, AsyncIterable):
+        async for name in file_names:
+            yield name
+    else:
+        for name in file_names:
+            yield name
+
+
+async def async_chunks(iterator: AsyncIterator[str], chunk_size: int) -> AsyncIterator[list[str]]:
+    chunk = []
+
+    async for item in iterator:
+        chunk.append(item)
+
+        if len(chunk) == chunk_size:
+            yield chunk
+            chunk = []
+
+    if chunk:
+        yield chunk
+
+
+async def bulk_delete_media(file_names: Iterable[str] | AsyncIterable[str], chunk_size: int = 500) -> None:
+    if not 1 <= chunk_size <= 1000:
+        raise ValueError('Размер пакета должен быть от 1 до 1000.')
+
+    storage = storages['default']
+
+    if isinstance(storage, S3Boto3Storage):
+        async with storage_client() as s3:
+            async for chunk in async_chunks(async_iter(file_names), chunk_size):
+                objects = [
+                    {'Key': posixpath.join(storage.location, name) if storage.location else name} for name in chunk
+                ]
+
+                result = await s3.delete_objects(Bucket=storage.bucket_name, Delete={'Objects': objects, 'Quiet': True})
+
+                if result.get('Errors'):
+                    raise RuntimeError(f'Ошибка удаления файлов из S3: {result["Errors"]}')
+    else:
+        async for name in async_iter(file_names):
+            await delete_local_file(storage, name)

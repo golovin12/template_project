@@ -85,7 +85,7 @@ class DocumentFolderForm(forms.ModelForm):
     def clean_name(self):
         name = self.cleaned_data['name'].strip()
 
-        if DocumentFolder.objects.filter(user=self.user, name__iexact=name, ).exists():
+        if DocumentFolder.objects.filter(user=self.user, name__iexact=name).exists():
             raise ValidationError('Папка с таким названием уже существует.')
 
         return name
@@ -99,20 +99,12 @@ class DocumentUploadForm(forms.ModelForm):
             'file': 'Файл',
             'folder': 'Папка',
         }
+        widgets = {
+            'folder': forms.HiddenInput(),
+        }
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
         self.instance.user = user
         self.fields['folder'].queryset = DocumentFolder.objects.filter(user=user)
         self.fields['folder'].required = False
-        self.fields['folder'].empty_label = 'Корневая папка'
-
-
-class DocumentSelectionForm(forms.Form):
-    files = forms.ModelMultipleChoiceField(
-        queryset=DocumentFile.objects.none(), widget=forms.CheckboxSelectMultiple, required=True
-    )
-
-    def __init__(self, *args, user, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['files'].queryset = user.files.all()

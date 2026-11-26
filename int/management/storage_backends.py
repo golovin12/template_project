@@ -1,9 +1,7 @@
-from itertools import islice
-
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import clean_name
 
-from django.core.files.storage import FileSystemStorage, storages
+from django.core.files.storage import FileSystemStorage
 
 
 class DevMediaStorage(FileSystemStorage):
@@ -38,22 +36,3 @@ class BackupStorage(S3Boto3Storage):
     location = 'backups'
     default_acl = 'private'
     file_overwrite = True
-
-
-def bulk_delete_media(file_names, chunk_size=500):
-    storage = storages['default']
-
-    iterator = iter(file_names)
-
-    if isinstance(storage, S3Boto3Storage):
-        while chunk := list(islice(iterator, chunk_size)):
-            storage.connection.meta.client.delete_objects(
-                Bucket=storage.bucket_name,
-                Delete={
-                    'Objects': [{'Key': f'{storage.location}/{name}'} for name in chunk],
-                    'Quiet': True,
-                },
-            )
-    else:
-        for file_name in iterator:
-            storage.delete(file_name)

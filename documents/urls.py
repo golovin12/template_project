@@ -11,6 +11,7 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
     path('folders/create/', views.folder_create, name='folder_create'),
+    path('folders/<int:folder_id>/delete/', views.folder_delete, name='folder_delete'),
     path('files/upload/', views.file_upload, name='file_upload'),
     path('files/<int:file_id>/download/', views.file_download, name='file_download'),
     path('files/<int:file_id>/delete/', views.file_delete, name='file_delete'),

@@ -49,7 +49,8 @@ class TestAuthUser(BaseTestCase):
         self.assertIs(result._auth_user, user)
 
     def test_organization_user_inherits_superuser_status(self):
-        user = AuthUser.objects.create_superuser(username='superuser', password='password', email='superuser@example.com')
+        user = AuthUser.objects.create_superuser(username='superuser', password='password',
+                                                 email='superuser@example.com')
 
         organization_user = user.organization_user
 

@@ -59,7 +59,7 @@ class DocumentFolder(models.Model):
 class DocumentFile(models.Model):
     user = models.ForeignKey(DocumentsUser, on_delete=models.CASCADE, related_name='files', verbose_name='Пользователь')
     folder = models.ForeignKey(
-        DocumentFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='files', verbose_name='Папка'
+        DocumentFolder, on_delete=models.CASCADE, null=True, blank=True, related_name='files', verbose_name='Папка'
     )
     file = models.FileField(upload_to=document_upload_to, max_length=500, verbose_name='Файл')
     original_name = models.CharField(max_length=255, verbose_name='Название файла')

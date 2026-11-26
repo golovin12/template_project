@@ -2,36 +2,50 @@ from typing import AsyncIterator
 from urllib.parse import quote
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import StreamingHttpResponse
 
 from common_tools.async_files import generate_zip, storage_client, ZipFileEntry
-from .models import DocumentFile, DocumentsUser
+from .models import DocumentFile, DocumentFolder, DocumentsUser
 
 
-async def create_zip_response(user: DocumentsUser, file_ids: list[int]) -> StreamingHttpResponse:
-    file_ids = list(file_ids)
+async def create_zip_response(user: DocumentsUser, file_ids: list[int], folder_ids: list[int]) -> StreamingHttpResponse:
+    file_ids = list(dict.fromkeys(file_ids))
+    folder_ids = list(dict.fromkeys(folder_ids))
 
-    if not file_ids:
+    if not file_ids and not folder_ids:
         raise ValidationError('Не выбраны файлы для скачивания.')
 
-    if len(file_ids) != len(set(file_ids)):
-        raise ValidationError('Некорректный список файлов.')
+    if file_ids:
+        selected_files_count = await DocumentFile.objects.filter(user=user, pk__in=file_ids).acount()
 
-    queryset = DocumentFile.objects.filter(user=user, pk__in=file_ids)
+        if selected_files_count != len(file_ids):
+            raise ValidationError('Некоторые файлы не найдены.')
 
-    documents_count = await queryset.acount()
+    folder_names = {}
 
-    if documents_count == 0:
-        raise ValidationError('Не выбраны файлы для скачивания.')
+    if folder_ids:
+        async for folder in DocumentFolder.objects.filter(user=user, pk__in=folder_ids).aiterator():
+            folder_names[folder.pk] = folder.name
 
-    if documents_count != len(file_ids):
-        raise ValidationError('Некоторые файлы не найдены.')
+        if len(folder_names) != len(folder_ids):
+            raise ValidationError('Некоторые папки не найдены.')
+
+    queryset = DocumentFile.objects.filter(user=user).filter(
+        Q(pk__in=file_ids) | Q(folder_id__in=folder_ids)).select_related('folder')
+
+    if not await queryset.aexists():
+        raise ValidationError('Выбранные папки не содержат файлов.')
 
     async def files() -> AsyncIterator[ZipFileEntry]:
         used_names = set()
 
         async for document in queryset.aiterator():
             archive_name = document.original_name
+
+            if document.folder_id in folder_names:
+                archive_name = f'{folder_names[document.folder_id]}/{archive_name}'
+
             candidate = archive_name
             index = 1
 
@@ -55,7 +69,6 @@ async def create_zip_response(user: DocumentsUser, file_ids: list[int]) -> Strea
                 yield chunk
 
     response = StreamingHttpResponse(stream(), content_type='application/zip')
-
     response['Content-Disposition'] = (
         'attachment; filename="documents.zip"; '
         f"filename*=UTF-8''{quote('documents.zip')}"

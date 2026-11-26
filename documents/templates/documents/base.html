@@ -6,103 +6,116 @@
 <head>
     <title>{% block title %}Документы{% endblock %}</title>
 
-    {% block meta_description %}{% endblock %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    {# Icon #}
-    <!-- Базовые иконки -->
     <link rel="shortcut icon" href="{% static 'documents/img/favicon.ico' %}" type="image/x-icon" sizes="any">
     <link rel="icon" href="{% static 'documents/img/favicon-32x32.png' %}" type="image/png" sizes="32x32">
     <link rel="icon" href="{% static 'documents/img/favicon-16x16.png' %}" type="image/png" sizes="16x16">
-
-    <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="{% static 'documents/img/apple-touch-icon.png' %}" sizes="180x180">
-
-    <!-- PWA (Manifest) -->
     <link rel="manifest" href="{% static 'documents/img/site.webmanifest' %}">
 
-    <!-- Windows Metro -->
-    <meta name="msapplication-TileImage" content="{% static 'documents/img/favicon-192x192.png' %}">
-    <meta name="msapplication-config" content="{% static 'documents/img/browserconfig.xml' %}">
-
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    {# bootstrap 4: jQuery first, then Popper.js, then Bootstrap JS #}
     <script src="{% static 'int/lib/jq/jquery-3.7.1.min.js' %}"></script>
     <script src="{% static 'int/lib/popper-1.14.7/popper.min.js' %}"></script>
     <script src="{% static 'int/lib/bootstrap-4.6.2/js/bootstrap.min.js' %}"></script>
+
     <link rel="stylesheet" href="{% static 'int/lib/bootstrap-4.6.2/css/bootstrap.min.css' %}">
-    {# icon font #}
     <link rel="stylesheet" href="{% static 'int/lib/material-symbols-outlined/main.css' %}">
-    {# select2 #}
-    <link rel="stylesheet" type='text/css' href="{% static 'int/lib/select2-4.0.13/css/select2.min.css' %}"/>
-    <script type="application/javascript" src="{% static 'int/lib/select2-4.0.13/js/select2.min.js' %}"></script>
-    {# common js #}
     <link rel="stylesheet" href="{% static 'int/css/base.css' %}">
-    {# dark theme #}
-    <link rel="stylesheet" type="text/css" href="{% static 'int/lib/daynight-switcher/css/daynight-switcher.css' %}">
-    <link rel="alternate stylesheet" data-daynight-css="night" type="text/css" href="{% static 'int/css/night.css' %}">
+    <link rel="stylesheet" href="{% static 'int/lib/daynight-switcher/css/daynight-switcher.css' %}">
+    <link rel="alternate stylesheet" data-daynight-css="night" href="{% static 'int/css/night.css' %}">
+
     {% block extrastyle %}{% endblock %}
 </head>
 
-<body class="{% block body_class %}application{% endblock %}">
+<body class="application">
 
-{% block main %}
-    {# MAIN CONTENT #}
-    <main role="main">
-        {# СООБЩЕНИЯ #}
-        {% block messages_wrap %}
-            <div class="{% block messages_container_cls %}container{% endblock %}" id="container_messages">
-                <div class="row">
-                    <div class="col-12">
-                        {% block messages %}
-                            {# Display django.contrib.messages as Bootstrap alerts #}
-                            {% bootstrap_messages %}
-                        {% endblock %}
-                    </div>
-                </div>
+<nav class="navbar navbar-expand-md navbar-light bg-light shadow-sm mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'documents:index' %}">
+            Мои документы
+        </a>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#documentsNavbar"
+                aria-controls="documentsNavbar" aria-expanded="false" aria-label="Переключить навигацию">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="documentsNavbar">
+            <ul class="navbar-nav ml-auto align-items-md-center">
+                {% if request.documents_user %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="documentsUserMenu" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{ request.documents_user.username }}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="documentsUserMenu">
+                            <form method="post" action="{% url 'documents:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item">Выйти</button>
+                            </form>
+                        </div>
+                    </li>
+                {% else %}
+                    {% if request.resolver_match.url_name == 'register' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'documents:login' %}">Войти</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'documents:register' %}">Регистрация</a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+
+                <li class="nav-item">
+                    <i class="material-icons">
+                        <a class="nav-link" data-daynight-moment="day" href="javascript:void(0);"
+                           title="Сменить тему"></a>
+                    </i>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main role="main">
+    <div class="container" id="container_messages">
+        <div class="row">
+            <div class="col-12">
+                {% bootstrap_messages %}
             </div>
-        {% endblock %}
+        </div>
+    </div>
 
-        {# ОСНОВНОЙ БЛОК #}
-        {% block content_wrap %}
-            <div class="{% block content_container_cls %}container{% endblock %}" id="container_content">
-                {% block content %}
-                    app content
-                {% endblock %}
-                {% block additional_content %}{% endblock %}
-            </div>
-        {% endblock %}
+    <div class="container" id="container_content">
+        {% block content %}{% endblock %}
+    </div>
 
-        {# Уведомления #}
-        <template id="notificationTemplate">
-            <div class="alert alert-dismissible fade show shadow" role="alert" style="margin-bottom: 10px;">
-                <strong class="notification-icon"></strong>
-                <span class="notification-message" style="white-space: pre-line;"></span>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        </template>
+    <template id="notificationTemplate">
+        <div class="alert alert-dismissible fade show shadow" role="alert" style="margin-bottom: 10px;">
+            <strong class="notification-icon"></strong>
+            <span class="notification-message" style="white-space: pre-line;"></span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </template>
 
-        <div id="notificationContainer"
-             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px;
-             max-width: calc(100% - 40px); width: auto; margin: 0 auto;"></div>
-    </main>
-{% endblock %}
+    <div id="notificationContainer"
+         style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px;
+         max-width: calc(100% - 40px); width: auto; margin: 0 auto;"></div>
+</main>
 
-{% block base_bottom %}
-    <script src="{% static 'int/lib/daynight-switcher/js/daynight-switcher.min.js' %}"></script>
-    {# переключатель для темной темы #}
-    <script src="{% static 'documents/js/common.js' %}"></script>
-    <script>
-        $(function () {
-            $('[data-toggle="tooltip"]').tooltip();
-        })
-    </script>
-{% endblock %}
+<script src="{% static 'int/lib/daynight-switcher/js/daynight-switcher.min.js' %}"></script>
+<script src="{% static 'documents/js/common.js' %}"></script>
 
-{# Additional JS #}
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+
 {% block extrascript %}{% endblock %}
 
 </body>

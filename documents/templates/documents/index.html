@@ -1,180 +1,190 @@
 {% extends 'documents/base.html' %}
+{% load bootstrap4 %}
 
 {% block title %}Мои документы{% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="mb-1">Мои документы</h3>
-            <span class="text-muted">{{ request.documents_user.username }}</span>
-        </div>
+    <div class="card shadow mb-4">
+        <div class="card-header p-x-adaptive bg-dark-blue d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">
+                    {% if current_folder %}
+                        {{ current_folder.name }}
+                    {% else %}
+                        Мои файлы
+                    {% endif %}
+                </h4>
+            </div>
 
-        <form method="post" action="{% url 'documents:logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-secondary">Выйти</button>
-        </form>
-    </div>
-
-    <div class="card mb-3">
-        <div class="card-header">
-            {% if current_folder %}
-                {{ current_folder.name }}
-            {% else %}
-                Мои файлы
-            {% endif %}
-        </div>
-
-        <div class="card-body">
-            <form method="post" action="{% url 'documents:file_upload' %}" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                {% if upload_form.non_field_errors %}
-                    <div class="alert alert-danger">{{ upload_form.non_field_errors }}</div>
+            <div class="d-flex">
+                {% if not current_folder %}
+                    <button type="button" class="btn btn-outline-warning mr-2" data-toggle="modal"
+                            data-target="#folderModal" title="Создать папку">
+                        <i class="material-icons align-bottom">create_new_folder</i>
+                    </button>
                 {% endif %}
 
-                <div class="form-row align-items-end">
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            {{ upload_form.file.label_tag }}
-                            {{ upload_form.file }}
-                            {% for error in upload_form.file.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                <form id="upload-form" method="post" action="{% url 'documents:file_upload' %}"
+                      enctype="multipart/form-data" class="mr-2">
+                    {% csrf_token %}
+                    {{ upload_form.folder }}
+                    <input type="file" name="file" id="id_file" class="d-none" required>
+                    <button type="button" class="btn btn-outline-primary" id="upload-button" title="Добавить файл">
+                        <i class="material-icons align-bottom">note_add</i>
+                    </button>
+                </form>
 
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            {{ upload_form.folder.label_tag }}
-                            {{ upload_form.folder }}
-                            {% for error in upload_form.folder.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary btn-block mb-3">Загрузить</button>
-                    </div>
+                <form id="zip-form" method="post"
+                      action="{% url 'documents:files_download' %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success" title="Скачать выбранное">
+                        <i class="material-icons align-bottom">download</i>
+                        <span class="d-none d-sm-inline">Скачать</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if upload_form.errors %}
+                <div class="alert alert-danger">
+                    {% bootstrap_form_errors upload_form %}
+                    {% bootstrap_form upload_form %}
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5 class="mb-0">Содержимое</h5>
-
-        <form id="zip-form" method="post"
-              action="{% url 'documents:files_download' %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-primary btn-sm">
-                Скачать выбранные ZIP
-            </button>
-        </form>
-    </div>
-
-    <div class="card mb-3">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>Название</th>
-                    <th>Дата</th>
-                    <th>Размер</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% if current_folder %}
+            {% endif %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
                     <tr>
-                        <td>
-                            <a href="{% url 'documents:index' %}" class="text-secondary"
-                               title="Вернуться в корневую директорию">...</a>
-                        </td>
-                        <td colspan="4">
-                            <a href="{% url 'documents:index' %}" class="text-secondary">
-                                На уровень выше
-                            </a>
-                        </td>
+                        <th style="width: 42px;">
+                            <input type="checkbox" id="select-all" title="Выделить всё">
+                        </th>
+                        <th>
+                            <a href="{{ name_sort_url }}" class="text-reset">Название</a>
+                        </th>
+                        <th>
+                            <a href="{{ date_sort_url }}" class="text-reset">Дата загрузки</a>
+                        </th>
+                        <th>
+                            <a href="{{ size_sort_url }}" class="text-reset">Размер</a>
+                        </th>
+                        <th></th>
                     </tr>
-                {% endif %}
+                    </thead>
+                    <tbody>
+                    {% if current_folder %}
+                        <tr>
+                            <td></td>
+                            <td colspan="4">
+                                <a href="{% url 'documents:index' %}" class="text-secondary">
+                                    <i class="material-icons align-middle">more_horiz</i>
+                                    На уровень выше
+                                </a>
+                            </td>
+                        </tr>
+                    {% endif %}
 
-                {% for folder in folders %}
-                    <tr>
-                        <td><span aria-hidden="true">📁</span></td>
-                        <td>
-                            <a href="{% url 'documents:index' %}?folder={{ folder.pk }}">
-                                {{ folder.name }}
-                            </a>
-                        </td>
-                        <td>{{ folder.created_at|date:"d.m.Y H:i" }}</td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                {% endfor %}
+                    {% for folder in folders %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="folders" value="{{ folder.pk }}" form="zip-form"
+                                       class="document-select">
+                            </td>
+                            <td>
+                                <i class="material-icons align-middle text-warning">folder</i>
+                                <a href="{% url 'documents:index' %}?folder={{ folder.pk }}">
+                                    {{ folder.name }} ({{ folder.files_count }})
+                                </a>
+                            </td>
+                            <td>{{ folder.created_at|date:"d.m.Y H:i" }}</td>
+                            <td></td>
+                            <td class="text-right">
+                                <form method="post" action="{% url 'documents:folder_delete' folder.pk %}"
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                                            title="Удалить папку"
+                                            onclick="return confirm('Удалить папку и все находящиеся в ней файлы? Это действие нельзя отменить.')">
+                                        <i class="material-icons">delete</i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
 
-                {% for document in files %}
-                    <tr>
-                        <td>
-                            <input type="checkbox" name="files" value="{{ document.pk }}" form="zip-form">
-                        </td>
-                        <td>
-                            <a href="{% url 'documents:file_download' document.pk %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
-                                {{ document.original_name }}
-                            </a>
-                        </td>
-                        <td>{{ document.created_at|date:"d.m.Y H:i" }}</td>
-                        <td>{{ document.size|filesizeformat }}</td>
-                        <td class="text-right">
-                            <form method="post"
-                                  action="{% url 'documents:file_delete' document.pk %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-danger btn-sm"
-                                        onclick="return confirm('Удалить файл?')">
-                                    Удалить
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
+                    {% for document in files %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="files" value="{{ document.pk }}" form="zip-form"
+                                       class="document-select">
+                            </td>
+                            <td>
+                                <i class="material-icons align-middle text-secondary">description</i>
+                                <a href="{% url 'documents:file_download' document.pk %}">
+                                    {{ document.original_name }}
+                                </a>
+                            </td>
+                            <td>{{ document.created_at|date:"d.m.Y H:i" }}</td>
+                            <td>{{ document.size|filesizeformat }}</td>
+                            <td class="text-right">
+                                <form method="post"
+                                      action="{% url 'documents:file_delete' document.pk %}{% if current_folder %}?folder={{ current_folder.pk }}{% endif %}"
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Удалить файл"
+                                            onclick="return confirm('Удалить файл?')">
+                                        <i class="material-icons align-bottom">delete</i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
 
-                {% if not folders and not files %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            Директория пуста.
-                        </td>
-                    </tr>
-                {% endif %}
-                </tbody>
-            </table>
+                    {% if not folders and not files %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                Директория пуста.
+                            </td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     {% if not current_folder %}
-        <div class="card">
-            <div class="card-header">Создать папку</div>
-            <div class="card-body">
-                <form method="post" action="{% url 'documents:folder_create' %}">
-                    {% csrf_token %}
-
-                    {% if folder_form.non_field_errors %}
-                        <div class="text-danger mb-2">{{ folder_form.non_field_errors }}</div>
-                    {% endif %}
-
-                    {% for field in folder_form %}
-                        <div class="form-group">
-                            {{ field.label_tag }}
-                            {{ field }}
-                            {% for error in field.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
+        <div class="modal fade" id="folderModal" tabindex="-1" role="dialog"
+             aria-labelledby="folderModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="post" action="{% url 'documents:folder_create' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="folderModalLabel">Создать папку</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
-                    {% endfor %}
-
-                    <button type="submit" class="btn btn-primary">Создать</button>
-                </form>
+                        <div class="modal-body">
+                            {% bootstrap_form folder_form %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-primary">Создать папку</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     {% endif %}
+{% endblock %}
+
+{% block extrascript %}
+    <script>
+        $(function () {
+            {% if folder_form.errors %}
+                $('#folderModal').modal('show');
+            {% endif %}
+        });
+    </script>
 {% endblock %}
