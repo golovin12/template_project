@@ -1,10 +1,12 @@
 from typing import AsyncIterator
+from urllib.parse import urlencode
 
 from asgiref.sync import sync_to_async
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.db.models import Count
 from django.db.models.functions import Lower
 from django.http import StreamingHttpResponse, HttpResponse
 from django.shortcuts import redirect, render
@@ -15,9 +17,9 @@ from django.views.decorators.http import require_POST
 from common_tools.async_files import storage_client, storage_file_iterator
 from common_tools.images import acompress_image
 from .auth import documents_login_required
-from .controllers import delete_file, save_folder
+from .controllers import delete_file, delete_folder, save_folder
 from .forms import (
-    DocumentsLoginForm, DocumentsRegistrationForm, DocumentFolderForm, DocumentSelectionForm, DocumentUploadForm
+    DocumentsLoginForm, DocumentsRegistrationForm, DocumentFolderForm, DocumentUploadForm
 )
 from .middleware import DocumentsHttpRequest, DocumentsUserMiddleware
 from .models import DocumentFile, DocumentFolder
@@ -27,6 +29,15 @@ from .zip import create_zip_response
 def _index_url(folder: DocumentFolder | None = None) -> str:
     url = reverse('documents:index')
     return f'{url}?folder={folder.pk}' if folder else url
+
+
+def _sort_url(folder, sort, direction):
+    params = {'sort': sort, 'direction': direction}
+
+    if folder:
+        params['folder'] = folder.pk
+
+    return f"{reverse('documents:index')}?{urlencode(params)}"
 
 
 async def _get_folder(user, folder_id: str | None) -> DocumentFolder | None:
@@ -45,15 +56,31 @@ async def _render_index(
     user = request.documents_user
 
     user_folders = [
-        folder async for folder in DocumentFolder.objects.filter(user=user).order_by(Lower('name'), 'pk')
+        folder async for folder in DocumentFolder.objects.filter(user=user)
+        .annotate(files_count=Count('files'))
+        .order_by(Lower('name'), 'pk')
     ]
 
     folders = user_folders if current_folder is None else []
 
+    sort = request.GET.get('sort', 'name')
+    direction = request.GET.get('direction', 'asc')
+
+    ordering = {
+        'name': Lower('original_name'),
+        'size': 'size',
+        'date': 'created_at',
+    }.get(sort, Lower('original_name'))
+
+    if direction == 'desc':
+        ordering = f'-{ordering}' if isinstance(ordering, str) else ordering.desc()
+    else:
+        ordering = ordering if isinstance(ordering, str) else ordering.asc()
+
     files = [
         document async for document in DocumentFile.objects.filter(
             user=user, folder=current_folder
-        ).order_by(Lower('original_name'), 'pk')
+        ).order_by(ordering, 'pk')
     ]
 
     folder_form = folder_form or DocumentFolderForm(user=user)
@@ -76,6 +103,11 @@ async def _render_index(
         'files': files,
         'folder_form': folder_form,
         'upload_form': upload_form,
+        'current_sort': sort,
+        'current_direction': direction,
+        'name_sort_url': _sort_url(current_folder, 'name', 'desc' if sort == 'name' and direction == 'asc' else 'asc'),
+        'date_sort_url': _sort_url(current_folder, 'date', 'desc' if sort == 'date' and direction == 'asc' else 'asc'),
+        'size_sort_url': _sort_url(current_folder, 'size', 'desc' if sort == 'size' and direction == 'asc' else 'asc'),
     })
 
 
@@ -84,14 +116,17 @@ def _validate_form(form_class, *args, **kwargs):
     return form, form.is_valid()
 
 
-async def _get_selected_file_ids(form: DocumentSelectionForm) -> list[int]:
-    return [document.pk async for document in form.cleaned_data['files']]
-
-
 async def _file_iterator(filename: str) -> AsyncIterator[bytes]:
     async with storage_client() as s3:
         async for chunk in storage_file_iterator(filename, s3):
             yield chunk
+
+
+def _parse_ids(values):
+    try:
+        return [int(value) for value in values]
+    except (TypeError, ValueError):
+        raise ValidationError('Некорректный список выбранных элементов.')
 
 
 async def register(request: DocumentsHttpRequest):
@@ -142,10 +177,9 @@ async def logout(request: DocumentsHttpRequest):
 
 @documents_login_required
 async def index(request: DocumentsHttpRequest):
-    folder_id = request.GET.get('folder')
-    current_folder = await _get_folder(request.documents_user, folder_id)
+    current_folder = await _get_folder(request.documents_user, request.GET.get('folder'))
 
-    if folder_id and current_folder is None:
+    if request.GET.get('folder') and current_folder is None:
         return redirect('documents:index')
 
     return await _render_index(request, current_folder=current_folder)
@@ -174,6 +208,19 @@ async def folder_create(request: DocumentsHttpRequest):
 
 @require_POST
 @documents_login_required
+async def folder_delete(request: DocumentsHttpRequest, folder_id: int):
+    try:
+        await delete_folder(request.documents_user, folder_id)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    else:
+        messages.success(request, 'Папка и её файлы удалены.')
+
+    return redirect('documents:index')
+
+
+@require_POST
+@documents_login_required
 async def file_upload(request: DocumentsHttpRequest):
     form, is_valid = await sync_to_async(_validate_form)(
         DocumentUploadForm, request.POST, request.FILES, user=request.documents_user
@@ -181,7 +228,6 @@ async def file_upload(request: DocumentsHttpRequest):
 
     if is_valid:
         document = form.save(commit=False)
-
         uploaded_file = form.cleaned_data['file']
         original_name = uploaded_file.name.replace('\\', '/').split('/')[-1][:255]
 
@@ -203,7 +249,6 @@ async def file_upload(request: DocumentsHttpRequest):
             return redirect(_index_url(folder))
 
     current_folder = form.cleaned_data.get('folder')
-
     return await _render_index(request, current_folder=current_folder, upload_form=form)
 
 
@@ -242,18 +287,11 @@ async def file_download(request: DocumentsHttpRequest, file_id: int):
 async def files_download(request: DocumentsHttpRequest):
     current_folder = await _get_folder(request.documents_user, request.GET.get('folder'))
 
-    form, is_valid = await sync_to_async(_validate_form)(
-        DocumentSelectionForm, request.POST, user=request.documents_user
-    )
-
-    if not is_valid:
-        messages.error(request, 'Выбери файлы для скачивания.')
-        return redirect(_index_url(current_folder))
-
-    file_ids = await _get_selected_file_ids(form)
-
     try:
-        return await create_zip_response(request.documents_user, file_ids)
+        file_ids = _parse_ids(request.POST.getlist('files'))
+        folder_ids = _parse_ids(request.POST.getlist('folders'))
+
+        return await create_zip_response(request.documents_user, file_ids, folder_ids)
     except ValidationError as error:
         messages.error(request, error.messages[0])
         return redirect(_index_url(current_folder))

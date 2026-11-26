@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
                 ('original_name', models.CharField(max_length=255, verbose_name='Название файла')),
                 ('size', models.PositiveBigIntegerField(verbose_name='Размер')),
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, verbose_name='Дата загрузки')),
-                ('folder', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='files', to='documents.documentfolder', verbose_name='Папка')),
+                ('folder', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='files', to='documents.documentfolder', verbose_name='Папка')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='files', to='documents.documentsuser', verbose_name='Пользователь')),
             ],
             options={

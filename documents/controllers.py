@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db import IntegrityError, transaction
 
+from common_tools.async_files import bulk_delete_media
 from common_tools.images import acompress_image
 from .models import DocumentFile, DocumentFolder, DocumentsUser
 
@@ -42,8 +43,7 @@ async def upload_file(user: DocumentsUser, uploaded_file: UploadedFile, folder_i
         if folder is None:
             raise ValidationError('Указанная папка не найдена.')
 
-    original_name = uploaded_file.name.replace('\\', '/').split('/')[-1]
-    original_name = original_name[:255]
+    original_name = uploaded_file.name.replace('\\', '/').split('/')[-1][:255]
 
     if not original_name:
         raise ValidationError('Некорректное имя файла.')
@@ -68,3 +68,16 @@ async def delete_file(user: DocumentsUser, file_id: int) -> DocumentFile:
     await document.adelete()
 
     return document
+
+
+async def delete_folder(user: DocumentsUser, folder_id: int) -> None:
+    folder = await DocumentFolder.objects.filter(pk=folder_id, user=user).afirst()
+
+    if folder is None:
+        raise ValidationError('Папка не найдена.')
+
+    await bulk_delete_media(
+        DocumentFile.objects.filter(folder=folder).values_list('file', flat=True)
+    )
+
+    await folder.adelete()
