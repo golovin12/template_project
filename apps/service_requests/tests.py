@@ -27,7 +27,6 @@ class ServiceRequestTestCase(BaseTestCase):
 
     def create_request(self, **kwargs):
         data = {
-            'request_number': 100001,
             'request_type': ServiceRequest.REQUEST_TYPE_CHOICES.FIRST_TIME,
             'branch': self.branch,
             'client_name': 'Иван Иванов',
@@ -42,7 +41,7 @@ class ServiceRequestTestCase(BaseTestCase):
 class TestRequestController(ServiceRequestTestCase):
 
     def test_create_request_increments_number(self):
-        self.create_request(request_number=100005)
+        self.create_request()
 
         instance = ServiceRequest(
             request_type=ServiceRequest.REQUEST_TYPE_CHOICES.FIRST_TIME,
@@ -80,7 +79,7 @@ class TestRequestController(ServiceRequestTestCase):
 
         result = RequestController.update_master_status(
             instance,
-            ServiceRequest.STATUS.ON_WAY,
+            ServiceRequest.STATUS.COMPLETED,
         )
 
         self.assertFalse(result)
@@ -279,7 +278,6 @@ class TestServiceRequestSignals(ServiceRequestTestCase):
     @patch('apps.service_requests.signals.push_new_request_message.send')
     def test_does_not_send_notification_without_city(self, send):
         ServiceRequest.objects.create(
-            request_number=100001,
             request_type=ServiceRequest.REQUEST_TYPE_CHOICES.FIRST_TIME,
             client_name='Иван Иванов',
             client_address='Москва',

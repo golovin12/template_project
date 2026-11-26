@@ -49,7 +49,7 @@ class TestAuthUser(BaseTestCase):
         self.assertIs(result._auth_user, user)
 
     def test_organization_user_inherits_superuser_status(self):
-        user = AuthUser.objects.create_superuser(username='admin', password='password', email='admin@example.com')
+        user = AuthUser.objects.create_superuser(username='superuser', password='password', email='superuser@example.com')
 
         organization_user = user.organization_user
 
@@ -230,7 +230,7 @@ class TestAuthorizeAsView(BaseIdentityViewTestCase):
     def setUp(self):
         super().setUp()
 
-        self.superuser = self.create_user('admin', is_staff=True, is_superuser=True)
+        self.superuser = self.create_user('superuser', is_staff=True, is_superuser=True)
         self.user = self.create_user('test')
         self.inactive_user = self.create_user('inactive', is_active=False)
 

@@ -337,11 +337,4 @@ VK = {
     'INFO_BOT_TOKEN': os.getenv('VK_INFO_BOT_TOKEN', 'info_bot_token'),
 }
 
-# Яндекс карты
-YANDEX_TILES = {
-    'EDITOR_KEY': os.getenv('YANDEX_TILES_KEY1', 'editor_key'),
-    'ASSIGN_KEY': os.getenv('YANDEX_TILES_KEY2', 'assign_key'),
-    'DETAIL_KEY': os.getenv('YANDEX_TILES_KEY3', 'detail_key')
-}
-
 LOGIN_URL = '/identity/login/'

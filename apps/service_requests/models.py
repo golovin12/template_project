@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from django.db.models.expressions import RawSQL
 from django.urls import reverse
 from django.utils import timezone
 
@@ -121,7 +122,10 @@ class ServiceRequest(models.Model):
         COMPLETED = 'completed', 'Завершена'
         CANCELED = 'canceled', 'Отменена'
 
-    request_number = models.PositiveIntegerField('Номер заявки', unique=True)
+    request_number = models.PositiveIntegerField(
+        unique=True, verbose_name='Номер заявки', editable=False,
+        db_default=RawSQL("nextval('service_requests_servicerequest_request_number_seq'::regclass)", [])
+    )
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children',
                                verbose_name='Родительская заявка')
     request_type = models.CharField(max_length=20, choices=REQUEST_TYPE_CHOICES.choices, verbose_name='Тип заявки')

@@ -14,7 +14,7 @@ class DevMediaStorage(FileSystemStorage):
 
 class MediaStorage(S3Boto3Storage):
     """Хранилище медиа"""
-    bucket_name = '091a0cc3-02303de7-8ec4-40c3-a350-3d5f8431bec4'
+    bucket_name = '02303de7-091a0cc3-8ec4-a350-40c3-3d5f8431bec4'
     location = 'media'
     default_acl = 'private'
     file_overwrite = False
@@ -34,7 +34,7 @@ class MediaStorage(S3Boto3Storage):
 
 class BackupStorage(S3Boto3Storage):
     """Хранилище бэкапов"""
-    bucket_name = '091a0cc3-02303de7-8ec4-40c3-a350-3d5f8431bec4'
+    bucket_name = '02303de7-091a0cc3-8ec4-a350-40c3-3d5f8431bec4'
     location = 'backups'
     default_acl = 'private'
     file_overwrite = True

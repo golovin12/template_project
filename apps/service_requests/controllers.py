@@ -1,3 +1,5 @@
+from django.db import router, connections
+
 from accounts.models import OrganizationUser
 from apps.bookkeeping.models import AccountingEntry
 from .models import ServiceRequest
@@ -8,10 +10,7 @@ class RequestController:
 
     @staticmethod
     def create_request(instance: ServiceRequest, user: OrganizationUser, commit=True):
-        """Создаёт заявку, назначая автора и порядковый номер."""
         instance.created_by = user
-        last_request = ServiceRequest.objects.order_by('-request_number').first()
-        instance.request_number = last_request.request_number + 1 if last_request else 100001
 
         if commit:
             instance.save()

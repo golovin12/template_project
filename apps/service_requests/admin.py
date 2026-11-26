@@ -48,7 +48,7 @@ class ServiceRequestAdmin(ManagerAdmin):
     )
     autocomplete_fields = ('branch',)
     list_select_related = ('parent', 'created_by', 'branch', 'city')
-    readonly_fields = ('request_time', 'closing_time', 'created_by', 'parent', 'closing_undo_widget')
+    readonly_fields = ('request_number', 'request_time', 'closing_time', 'created_by', 'parent', 'closing_undo_widget')
     ordering = ('-pk',)
 
     fieldsets = (

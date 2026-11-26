@@ -217,12 +217,8 @@ class Command(BaseCommand):
         return device_types
 
     def _create_requests(self, users, branches, device_types, count):
-        last_number = (
-                          ServiceRequest.objects
-                          .order_by('-request_number')
-                          .values_list('request_number', flat=True)
-                          .first()
-                      ) or 200000
+        last_number = ServiceRequest.objects.order_by('-request_number').values_list(
+            'request_number', flat=True).first() or 200000
 
         statuses = ServiceRequest.STATUS.values
         request_types = ServiceRequest.REQUEST_TYPE_CHOICES.values
@@ -235,17 +231,16 @@ class Command(BaseCommand):
                 start_date='-1y',
                 end_date='now',
             )
-            time_to_service = request_time + timedelta(
-                hours=random.randint(1, 72),
+            status = random.choice(statuses)
+            completed = status == ServiceRequest.STATUS.COMPLETED
+            has_diagnostics = status in (ServiceRequest.STATUS.SERVICE_DIAGNOSTICS, ServiceRequest.STATUS.COMPLETED)
+
+            time_to_service = (
+                request_time + timedelta(hours=random.randint(1, 168)) if has_diagnostics else None
             )
 
-            status = random.choice(statuses)
-
-            completed = status == ServiceRequest.STATUS.COMPLETED
-
             closing_time = (
-                time_to_service + timedelta(hours=random.randint(1, 48))
-                if completed else None
+                request_time + timedelta(days=random.randint(1, 40)) if completed else None
             )
 
             device_type = random.choice(device_types)
@@ -265,10 +260,7 @@ class Command(BaseCommand):
                     problem_description=fake.text(max_nb_chars=200),
                     device_type=device_type.name,
                     time_to_service=time_to_service,
-                    service_report=(
-                        fake.text(max_nb_chars=300)
-                        if completed else ''
-                    ),
+                    service_report=fake.text(max_nb_chars=300) if completed else '',
                     sd_closing_date=(
                         time_to_service.date()
                         if status == ServiceRequest.STATUS.SERVICE_DIAGNOSTICS
@@ -286,10 +278,7 @@ class Command(BaseCommand):
                 )
             )
 
-        ServiceRequest.objects.bulk_create(
-            objects,
-            batch_size=500,
-        )
+        ServiceRequest.objects.bulk_create(objects, batch_size=500)
 
         created = list(
             ServiceRequest.objects

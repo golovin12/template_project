@@ -80,8 +80,8 @@ services:
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc alias set minio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb minio/091a0cc3-02303de7-8ec4-40c3-a350-3d5f8431bec4;
-      /usr/bin/mc policy set private minio/091a0cc3-02303de7-8ec4-40c3-a350-3d5f8431bec4;
+      /usr/bin/mc mb minio/02303de7-091a0cc3-8ec4-a350-40c3-3d5f8431bec4;
+      /usr/bin/mc policy set private minio/02303de7-091a0cc3-8ec4-a350-40c3-3d5f8431bec4;
       echo 'Buckets created successfully';
       exit 0;
       "
