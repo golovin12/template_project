@@ -30,7 +30,7 @@
 
 <body class="application">
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-4">
+<nav class="navbar navbar-expand-md navbar-light bg-light shadow-sm mb-4">
     <div class="container">
         <a class="navbar-brand" href="{% url 'documents:index' %}">
             Мои документы
@@ -42,7 +42,7 @@
         </button>
 
         <div class="collapse navbar-collapse" id="documentsNavbar">
-            <ul class="navbar-nav ml-auto align-items-lg-center">
+            <ul class="navbar-nav ml-auto align-items-md-center">
                 {% if request.documents_user %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="documentsUserMenu" role="button"
