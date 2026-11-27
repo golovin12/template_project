@@ -19,7 +19,7 @@
         </a>
     </li>
     <li class="breadcrumb-item">
-        Привязать аккаунт: {{ form.instance.username }} к текущей зоне
+        Привязать аккаунт: {{ form.instance.username }} к текущей организации
     </li>
 {% endblock %}
 
@@ -28,7 +28,7 @@
         <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-header p-x-adaptive h4 bg-dark-blue">
-                    Привязать аккаунт: {{ form.instance.username }} к текущей зоне
+                    Привязать аккаунт: {{ form.instance.username }} к текущей организации
                 </div>
                 <div class="card-body p-x-adaptive pb-0">
                     <form method="post" autocomplete="off" class="prevent-double-submit">
@@ -42,7 +42,7 @@
 
                         <div class="form-group text-right">
                             <button type="submit" class="btn btn-success mb-2 mb-sm-0">
-                                <i class="material-icons align-bottom">check</i> Привязать к текущей зоне
+                                <i class="material-icons align-bottom">check</i> Привязать к текущей организации
                             </button>
                         </div>
                     </form>

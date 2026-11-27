@@ -43,7 +43,7 @@ class AuthUser(AbstractUser):
 
 
 class Organization(models.Model):
-    """Описание зоны и связанной с ней базы данных."""
+    """Описание организации и связанной с ней базы данных."""
     name = models.CharField('Название', max_length=100, unique=True)
     database_alias = models.CharField('Алиас базы данных', max_length=50, unique=True)
 

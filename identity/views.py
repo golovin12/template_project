@@ -43,7 +43,7 @@ class LogoutView(auth_views.LogoutView):
 
 
 class SelectOrganizationView(RoleRequiredMixin, View):
-    """Переключение текущей зоны."""
+    """Переключение между организациями."""
 
     def post(self, request: OrganizationRequest, *args, **kwargs):
         organization_alias = request.POST.get('organization_alias')
